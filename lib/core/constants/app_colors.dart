@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+class AppConst {
+  static const String appVersion ="0.0.0.1";
+}
 
 class AppColors {
   static const Color bgStart = Color(0xFF05060A);
