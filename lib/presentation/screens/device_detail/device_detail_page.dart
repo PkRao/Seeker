@@ -29,9 +29,11 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
   final ValueNotifier<bool> connectionStatus = ValueNotifier(false);
   late MacProgrammingController macController;
   bool assignBat = false;
+  bool isLoading = false;
 
   List<String> list = [];
   bool configMAc = false;
+
   @override
   void dispose() {
     macController.stopBatInfoPolling();
@@ -55,28 +57,29 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
         deviceId: widget.bluetooth.connectedDeviceId!,
         serviceUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120021"),
         writeUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120022"),
-        notifyUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120023"),
+        notifyUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120024"),
+        seekerInfoUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120024"),
       );
 
       macController.startNotifications();
+      macController.startDeviceNotifications();
       macController.startBatInfoPolling();
 
 
-
-
       macController.errorText.addListener(_errorListener);
-
     } catch (_) {}
   }
- void _errorListener  () {
-  final msg = macController.errorText.value;
-  if (msg != null && msg.isNotEmpty && mounted) {
-  ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(content: Text(msg), backgroundColor: Colors.redAccent,duration:Duration(seconds:4)),
-  );
-  macController.errorText.value = null;
+
+  void _errorListener() {
+    final msg = macController.errorText.value;
+    if (msg != null && msg.isNotEmpty && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg,style: TextStyle(color: AppColors.lightBg),), backgroundColor: AppColors.card, duration: Duration(seconds: 4)),
+      );
+      macController.errorText.value = null;
+    }
   }
-}
+
   void _listener() {
     if (widget.bluetooth.isConnected.value == false) {
       // ✅ Auto close the page
@@ -127,48 +130,57 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                     });
                   } else if (value == 2) {
                     // 🧹 Clear All Batteries
+                    setState(() {
+                      isLoading=true;
 
-                    if (await macController.clearAllMacs()) macController.batInfo.value = [];
+                    });
+                    if (await macController.clearAllMacs())
+                      macController.batInfo.value = [];
+                    setState(() {
+                      isLoading=false;
+
+                    });
                   }
                   else if (value == 3) {
                     // 🔌 Disconnect Device
-                    await widget.bluetooth.disconnect(widget.bluetooth.connectedDeviceId??"");
+                    await widget.bluetooth.disconnect(widget.bluetooth.connectedDeviceId ?? "");
                     if (mounted) Navigator.of(context).pop();
                   }
                 },
                 itemBuilder:
-                    (context) => [
-                      PopupMenuItem<int>(
-                        value: 1,
-                        child: Row(
-                          children: const [
-                            Icon(Icons.settings_outlined, color: Colors.cyanAccent, size: 18),
-                            SizedBox(width: 10),
-                            Text("Configure Batteries", style: TextStyle(color: Colors.white)),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem<int>(
-                        value: 2,
-                        child: Row(
-                          children: const [
-                            Icon(Icons.delete_forever_outlined, color: Colors.redAccent, size: 18),
-                            SizedBox(width: 10),
-                            Text("Clear All Batteries", style: TextStyle(color: Colors.white)),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem<int>(
-                        value: 3,
-                        child:Row(
-                          children: const [
-                            Icon(Icons.bluetooth_disabled_outlined, color:Colors.orangeAccent, size: 18),
-                            SizedBox(width: 10),
-                            Text("Disconnect", style: TextStyle(color: Colors.white)),
-                          ],
-                        ),
-                      ),
-                    ],
+                    (context) =>
+                [
+                  PopupMenuItem<int>(
+                    value: 1,
+                    child: Row(
+                      children: const [
+                        Icon(Icons.settings_outlined, color: Colors.cyanAccent, size: 18),
+                        SizedBox(width: 10),
+                        Text("Configure Batteries", style: TextStyle(color: Colors.white)),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<int>(
+                    value: 2,
+                    child: Row(
+                      children: const [
+                        Icon(Icons.delete_forever_outlined, color: Colors.redAccent, size: 18),
+                        SizedBox(width: 10),
+                        Text("Clear All Batteries", style: TextStyle(color: Colors.white)),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem<int>(
+                    value: 3,
+                    child: Row(
+                      children: const [
+                        Icon(Icons.bluetooth_disabled_outlined, color: Colors.orangeAccent, size: 18),
+                        SizedBox(width: 10),
+                        Text("Disconnect", style: TextStyle(color: Colors.white)),
+                      ],
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -220,6 +232,20 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                                   widget.bluetooth.connectedDevice?.id ?? "-",
                                   style: const TextStyle(fontSize: 14, color: Colors.white70),
                                 ),
+                                ValueListenableBuilder<Map>(
+                                    valueListenable: macController.deviceInfo,
+                                    builder: (_, deviceInfo, __) {
+                                      printFunc("BAT Info ${deviceInfo}");
+                                      getSize(context);
+                                      if (deviceInfo.isEmpty) {
+                                        return const Center(child: Text("-"));
+                                      }
+                                      else {
+                                        return Center(child: Text("${deviceInfo["SerialNo"]}"));
+                                      }
+                                    }),
+
+
                               ],
                             ),
                           ],
@@ -228,7 +254,9 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                           width: 48,
                           height: 48,
                           child: RotatingRefreshButton(
-                            onPressed: () {
+                            onPressed: () async {
+                              macController.stopBatInfoPolling();
+                              await macController.getSeekrInfo();
                               macController.startBatInfoPolling();
                             },
                           ),
@@ -407,21 +435,21 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                             height: 44,
                             child: ElevatedButton(
                               onPressed:
-                                  list.length >= 2
-                                      ? () async {
-                                        // 👉 Proceed action
-                                        printFunc("Proceed clicked with MACs: $list");
-                                        configMAc = false;
-                                        setState(() {});
-                                        // call API / navigate / start BLE config here
-                                        await macController.programMacs(macList: list);
-                                        setState(() {
-                                          assignBat = false;
-                                          list.clear();
-                                          configMAc = false;
-                                        });
-                                      }
-                                      : null, // disabled if not enough batteries
+                              list.length >= 2
+                                  ? () async {
+                                // 👉 Proceed action
+                                printFunc("Proceed clicked with MACs: $list");
+                                configMAc = false;
+                                setState(() {});
+                                // call API / navigate / start BLE config here
+                                await macController.programMacs(macList: list);
+                                setState(() {
+                                  assignBat = false;
+                                  list.clear();
+                                  configMAc = false;
+                                });
+                              }
+                                  : null, // disabled if not enough batteries
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.transparent,
                                 shadowColor: Colors.transparent,
@@ -455,7 +483,24 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                               ),
                             ),
                           ),
-
+                        ValueListenableBuilder<bool>(
+                            valueListenable: macController.isBusy,
+                            builder: (_, isBusy, __) {
+                              getSize(context);
+                              if (isBusy && !assignBat && !configMAc) {
+                                return const Center(
+                                  child: SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: Colors.cyanAccent),
+                                  ),
+                                );
+                              }
+                              else {
+                                return SizedBox();
+                              }
+                            }),
                         // _valueTile("time", "$timestamp",  Colors.blueAccent),
                       ],
                     ),
@@ -466,30 +511,46 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
               ValueListenableBuilder<List<Map?>>(
                 valueListenable: macController.batInfo,
                 builder: (_, batInfo, __) {
+                  printFunc("BAT Info ${batInfo}");
                   getSize(context);
-                  if (batInfo.isEmpty) {
-                    return const Center(child: Text("No data"));
-                  }
-                  return Container(
-                    padding: EdgeInsets.only(bottom: 15),
-                    height: screenSize.height * 0.65,
-                    width: screenSize.width * 0.9,
-                    child: GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.55, // 🔥 makes tile taller
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                      ),
-                      itemCount: batInfo.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        return BatteryInfoTile(data: batInfo[index] ?? {}, macController: macController);
-                        Container(
-                          width: 200,
-                          child: Card(child: Center(child: Text('${batInfo[index]?["mac"]}'))),
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: macController.isBusy,
+                    builder: (_, isbussy, __) {
+                      getSize(context);
+                      if (!isbussy&&isLoading) {
+                        if (batInfo.isEmpty) {
+                          return const Center(child: Text("No data"));
+                        }
+                        return Container(
+                          padding: EdgeInsets.only(bottom: 15),
+                          height: screenSize.height * 0.65,
+                          width: screenSize.width * 0.9,
+                          child: GridView.builder(
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.55, // 🔥 makes tile taller
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                            ),
+                            itemCount: int.tryParse(macController.deviceInfo.value["Batteries"].toString()) ??
+                                batInfo.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              return BatteryInfoTile(
+                                  data: batInfo[index] ?? {}, macController: macController);
+                            },
+                          ),
                         );
-                      },
-                    ),
+                      }
+                      else {
+                        return const Center(
+                          child: SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.cyanAccent),
+                          ),
+                        );
+                      }
+                    },
                   );
                 },
               ),

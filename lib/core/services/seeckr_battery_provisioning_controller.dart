@@ -7,13 +7,16 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 class MacProgrammingController {
   final FlutterReactiveBle ble;
   final String deviceId;
+  final int interval=10;
 
   final Uuid serviceUuid;
   final Uuid writeUuid;
   final Uuid notifyUuid;
+  final Uuid seekerInfoUuid;
 
   late QualifiedCharacteristic _writeChar;
   late QualifiedCharacteristic _notifyChar;
+  late QualifiedCharacteristic _notifyDeviceInfo;
 
   StreamSubscription<List<int>>? _notifySub;
 
@@ -21,6 +24,7 @@ class MacProgrammingController {
   final ValueNotifier<bool> isBusy = ValueNotifier(false);
   final ValueNotifier<String> progressText = ValueNotifier("");
   final ValueNotifier<List<Map?> >batInfo = ValueNotifier([]);
+  final ValueNotifier<Map<String,dynamic> >deviceInfo = ValueNotifier({});
   final ValueNotifier<String?> errorText = ValueNotifier(null);
 
   // ACK handling
@@ -38,7 +42,8 @@ class MacProgrammingController {
     required this.serviceUuid,
     required this.writeUuid,
     required this.notifyUuid,
-  }) {
+    required this.seekerInfoUuid}) {
+
     _writeChar = QualifiedCharacteristic(
       deviceId: deviceId,
       serviceId: serviceUuid,
@@ -49,6 +54,10 @@ class MacProgrammingController {
       deviceId: deviceId,
       serviceId: serviceUuid,
       characteristicId: notifyUuid,
+    );  _notifyDeviceInfo = QualifiedCharacteristic(
+      deviceId: deviceId,
+      serviceId: serviceUuid,
+      characteristicId: seekerInfoUuid,
     );
   }
 
@@ -61,117 +70,191 @@ class MacProgrammingController {
       },
     );
   }
+  /// Call ONCE after connection
+  void startDeviceNotifications() {
+    _notifySub = ble.subscribeToCharacteristic(_notifyDeviceInfo).listen(
+      _handleNotifyDeviceInfo,
+      onError: (e) {
+        errorText.value = "Notify error: $e";
+      },
+    );
+  }
 
   void dispose() {
     _notifySub?.cancel();
   }
 
   // ===============================
+  // NOTIFY Helper function for live data (ACK / NACK)
+  // ===============================
+  //
+  void _processJson(String jsonString) {
+    try {
+      final json = jsonDecode(jsonString);
+      printFunc("📩 JSON RECEIVED: $json");
+
+      // -------------------------------
+      // LIVE DATA JSON
+      // -------------------------------
+      if (json.containsKey("devices")) {
+        final devices = json["devices"] as List;
+
+// Total batteries you expect
+        const int totalBatteries = 4;
+
+// Create empty slots
+        final List<Map<String, dynamic>?> ordered =
+        List.filled(totalBatteries, null);
+
+        for (final e in devices) {
+          final map = Map<String, dynamic>.from(e);
+          // final String indexStr = (map["index"] ?? "").toString().toLowerCase(); // b1
+          // final int? pos = int.tryParse(indexStr.replaceAll("b", ""));
+
+          final int? pos = int.tryParse(((map["index"] ?? "--").toString().toLowerCase())[1]);
+
+          if (pos == null || pos <= 0 || pos > totalBatteries) continue;
+
+          final now = DateTime.now();
+          map["time"] =
+          "${now.hour.toString().padLeft(2, '0')}:"
+              "${now.minute.toString().padLeft(2, '0')}:"
+              "${now.second.toString().padLeft(2, '0')}";
+
+          ordered[pos - 1] = map;   // b1 → index 0
+        }
+
+// Optional: Fill missing batteries with defaults
+        batInfo.value = List.generate(totalBatteries, (i) {
+          return ordered[i] ??
+              {};
+        });
+
+        printFunc("✅ LIVE DATA PARSED (${batInfo.value.length} batteries)");
+        return;
+      }
+
+
+      // -------------------------------
+      // ACK JSON
+      // -------------------------------
+      if (json.containsKey("ack")) {
+        printFunc("📩 ACK RECEIVED: $json");
+
+        if (json["ack"] == "SET_MAC") {
+          _ackCompleter?.complete(json["status"] == "OK");
+        }
+        else if (json["ack"] == "DELETE") {
+          _ackCompleter?.complete(json["status"] == "OK");
+          errorText.value = "👍 Battery Deleted";
+        }
+        else if (json["ack"] == "CHANGE") {
+          _ackCompleter?.complete(json["status"] == "OK");
+          if (json["status"] == "OK") {
+            errorText.value = "👍 Battery Linked";
+          } else {
+            errorText.value = json["reason"];
+            if (_ackCompleter != null && !_ackCompleter!.isCompleted) {
+              _ackCompleter!.complete(false);
+            }
+          }
+        }
+        else if (json["ack"] == "LIVE_DATA") {
+          printFunc("✅ Live data ACK received");
+        }
+      }
+      if (json.containsKey("type")) {
+       if (json["type"] == "DEVICE_INFO") {
+         deviceInfo.value = json;
+       }
+      }
+
+    } catch (e) {
+      printFunc("❌ JSON PARSE ERROR: $e");
+      errorText.value = "❌ failed: $e";
+
+    }
+  }
+
+  //
+  // ===============================
+  // DEVICE NOTIFY HANDLER (ACK / NACK)
+  // ===============================
+  void _handleNotifyDeviceInfo(List<int> data) {
+    final chunk = utf8.decode(data);
+    printFunc("RAW CHUNK Device info : $chunk");
+
+    _notifyBuffer += chunk;
+
+    // Process buffer while it contains possible JSON
+    while (true) {
+      final startIndex = _notifyBuffer.indexOf('{');
+      if (startIndex == -1) return;
+
+      int braceCount = 0;
+      int endIndex = -1;
+
+      for (int i = startIndex; i < _notifyBuffer.length; i++) {
+        if (_notifyBuffer[i] == '{') braceCount++;
+        if (_notifyBuffer[i] == '}') braceCount--;
+
+        if (braceCount == 0) {
+          endIndex = i;
+          break;
+        }
+      }
+
+      // JSON not complete yet → wait for more chunks
+      if (endIndex == -1) return;
+
+      final jsonString =
+      _notifyBuffer.substring(startIndex, endIndex + 1);
+
+      // Remove processed JSON from buffer
+      _notifyBuffer =
+          _notifyBuffer.substring(endIndex + 1);
+
+      _processJson(jsonString.trim());
+    }
+  }
+  // ===============================
   // NOTIFY HANDLER (ACK / NACK)
   // ===============================
   void _handleNotify(List<int> data) {
     final chunk = utf8.decode(data);
     printFunc("RAW CHUNK: $chunk");
-    // if (!(_notifyBuffer.contains(chunk))) {
-    // }
+
     _notifyBuffer += chunk;
 
-    while (_notifyBuffer.contains("\n")) {
-      final newlineIndex = _notifyBuffer.indexOf("\n");
-      final line =
-      _notifyBuffer.substring(0, newlineIndex).trim();
+    // Process buffer while it contains possible JSON
+    while (true) {
+      final startIndex = _notifyBuffer.indexOf('{');
+      if (startIndex == -1) return;
 
+      int braceCount = 0;
+      int endIndex = -1;
+
+      for (int i = startIndex; i < _notifyBuffer.length; i++) {
+        if (_notifyBuffer[i] == '{') braceCount++;
+        if (_notifyBuffer[i] == '}') braceCount--;
+
+        if (braceCount == 0) {
+          endIndex = i;
+          break;
+        }
+      }
+
+      // JSON not complete yet → wait for more chunks
+      if (endIndex == -1) return;
+
+      final jsonString =
+      _notifyBuffer.substring(startIndex, endIndex + 1);
+
+      // Remove processed JSON from buffer
       _notifyBuffer =
-          _notifyBuffer.substring(newlineIndex + 1);
+          _notifyBuffer.substring(endIndex + 1);
 
-      if (line.isEmpty) continue;
-
-      // -------------------------------
-      // LIVE DATA START
-      // -------------------------------
-      if (line.contains("\$LIVE_DATA_START")) {
-        _liveDataActive = true;
-        _liveDataBuffer = "";
-        printFunc("📥 LIVE DATA STREAM START");
-        continue;
-      }
-
-      // -------------------------------
-      // LIVE DATA END
-      // -------------------------------
-      if (line.contains("\$LIVE_DATA_END")) {
-        _liveDataActive = false;
-        printFunc("📥 LIVE DATA STREAM END");
-printFunc("$_liveDataBuffer");
-        try {
-          final json = jsonDecode(_liveDataBuffer.trim());
-
-          // IMPORTANT: matches your HTML
-          final devices = json["devices"] as List;
-          batInfo.value = devices
-              .map<Map<String, dynamic>>((e) {
-            final map = Map<String, dynamic>.from(e);
-            final now = DateTime.now();
-            map["time"] =
-            "${now.hour.toString().padLeft(2, '0')}:"
-                "${now.minute.toString().padLeft(2, '0')}:"
-                "${now.second.toString().padLeft(2, '0')}";
-            return map;
-          })
-              .toList();
-
-          printFunc(
-              "✅ LIVE DATA PARSED (${batInfo.value.length} batteries)");
-          printFunc(
-              "✅ LIVE DATA PARSED \n (${batInfo.value})");
-        } catch (e) {
-          printFunc("❌ LIVE DATA JSON ERROR: $e");
-          errorText.value="❌ LIVE DATA JSON ERROR :\n $e";
-        }
-
-        _liveDataBuffer = "";
-        continue;
-      }
-
-      // -------------------------------
-      // LIVE DATA CONTENT
-      // -------------------------------
-      if (_liveDataActive) {
-        _liveDataBuffer += line;
-        continue;
-      }
-
-      // -------------------------------
-      // NORMAL ACK JSON
-      // -------------------------------
-      try {
-        final json = jsonDecode(line);
-        printFunc("📩 ACK RECEIVED: $json");
-
-
-        if (json["ack"] == "SET_MAC") {
-
-          _ackCompleter?.complete(json["status"] == "OK");
-        }
-        else  if (json["ack"] == "DELETE") {
-          _ackCompleter?.complete(json["status"] == "OK");
-          errorText.value="Battery Deleted";
-
-        }
-        else  if (json["ack"] == "CHANGE") {
-          _ackCompleter?.complete(json["status"] == "OK");
-          if(json["status"] == "OK") {
-            errorText.value = "👍 Battery Added";
-          }else{
-
-            errorText.value=json["reason"];
-            if (_ackCompleter != null && !_ackCompleter!.isCompleted) {
-              _ackCompleter!.complete(false);
-            }}
-        }
-      } catch (_) {
-        printFunc("📄 RAW TEXT: $line");
-      }
+      _processJson(jsonString.trim());
     }
   }
 
@@ -213,12 +296,13 @@ printFunc("$_liveDataBuffer");
 
     try {
       success = await _sendWithAck("CLEAR");
+      errorText.value = "👍 Configuration cleared";
 
       if (!success) {
-        errorText.value = "Clear all batteries failed";
+        errorText.value = "❌ Failed to Clear configuration";
       }
     } catch (e) {
-      errorText.value = "Clear failed: $e";
+      errorText.value = "❌ Clear Config failed: $e";
       printFunc("Exception clear all : ${errorText.value}");
       success = false;
     }
@@ -230,21 +314,27 @@ printFunc("$_liveDataBuffer");
   // ===============================
   // De Link Tracker
   // ===============================
-  Future<void> deleteTrackr(String index) async {
+  Future<bool> deleteTrackr(String index) async {
     isBusy.value = true;
     errorText.value = null;
 printFunc("DELETE-$index\n");
+    bool success = false;
 
     try {
-      await ble.writeCharacteristicWithResponse(
-        _writeChar,
-        value: utf8.encode("DELETE-$index\n"));
+      success = await _sendWithAck("DELETE-$index");
+      errorText.value = "👍 Battery ${index.toUpperCase()} unlinked.";
+
+      if (!success) {
+        errorText.value = "❌ Failed to unlink battery (${index.toUpperCase()})";
+      }
     } catch (e) {
-      errorText.value = "Delete failed: $e";
-      printFunc("Exception clear all : ${errorText.value}");
+      errorText.value = "❌ Unlink failed: $e";
+      printFunc("Unlink clear all : ${errorText.value}");
+      success = false;
     }
 
     isBusy.value = false;
+return success;
   }
 
   // ===============================
@@ -283,7 +373,8 @@ printFunc("DELETE-$index\n");
         }
 
         if (attempt == retryCount) {
-          errorText.value = "Failed at B$index (MAC: ${macList[i]})";
+          errorText.value = "❌ Failed to link battery (B${index} MAC: ${macList[i]})";
+
           isBusy.value = false;
           success=false;
         }
@@ -291,7 +382,7 @@ printFunc("DELETE-$index\n");
 
     }
 
-    progressText.value = "✅ All MACs programmed";
+    progressText.value = "👍 All Batteries Configured";
     isBusy.value = false;
     printFunc("${progressText.value }");
     return success;
@@ -326,18 +417,21 @@ printFunc("DELETE-$index\n");
 
         if (ack) {
           success = true;
+          errorText.value =  "👍 Battery liked";
+
           break;
         }
 
         if (attempt == 2) {
-          errorText.value = "Failed at B$index (MAC: ${macId})";
+          errorText.value = "❌ Failed to link battery (${index.toUpperCase()})";
+
           isBusy.value = false;
           success=false;
         }
 
     }
 
-    progressText.value = "✅ All MACs programmed";
+    // progressText.value = "👍 Battery liked";
     isBusy.value = false;
     printFunc("${progressText.value }");
     return success;
@@ -355,13 +449,32 @@ printFunc("DELETE-$index\n");
       await _readBatInfoWithAck(payload);
     }
 
-    _batInfoTimer = Timer.periodic(const Duration(seconds: 10), (_) async {
+    _batInfoTimer = Timer.periodic( Duration(seconds: interval), (_) async {
       if (isBusy.value) return;
 
       await _readBatInfoWithAck(payload);
     });
   }
 
+  // ===============================
+  //Get Seekr info
+  // ===============================
+  Future<void> getSeekrInfo() async {
+    isBusy.value = true;
+    errorText.value = null;
+    printFunc("DEVICE_INFO\n");
+
+    try {
+      await ble.writeCharacteristicWithResponse(
+          _notifyDeviceInfo,
+          value: utf8.encode("DEVICE_INFO\n"));
+    } catch (e) {
+      errorText.value = "DEVICE_INFO failed: $e";
+      printFunc("Exception clear all : ${errorText.value}");
+    }
+
+    isBusy.value = false;
+  }
 
   void stopBatInfoPolling() {
     _batInfoTimer?.cancel();
@@ -373,11 +486,10 @@ printFunc("DELETE-$index\n");
   // Read BAt WITH ACK + TIMEOUT
   // ===============================
   Future<bool> _readBatInfoWithAck(
-      String payload, {
-        Duration timeout = const Duration(seconds: 10),
-      }) async {
+      String payload) async {
 
     _ackCompleter = Completer<bool>();
+    Duration timeout =  Duration(seconds: interval-1);
 
     try {
       await ble.writeCharacteristicWithResponse(

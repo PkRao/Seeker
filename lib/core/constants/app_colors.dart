@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 class AppConst {
-  static const String appVersion ="0.0.1";
+  static const String appVersion ="0.1.0";
 }
 
 class AppColors {
