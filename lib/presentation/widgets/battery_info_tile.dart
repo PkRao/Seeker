@@ -47,6 +47,14 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
  "BSN":"252011890",
  "valid":true
  }
+
+    final voltage = widget.data["voltage"] ?? 0;
+    final temperature = widget.data["temperature"] ?? 0;
+    final charge = widget.data["percentage"] ?? 0;
+    final mac = widget.data["mac"] ?? "";
+    final bsn = widget.data["BSN"] ?? "";
+    final live = (widget.data["valid"]??true).toString()=="true";
+    */
     final voltage = widget.data["voltage"] ?? 0;
     final temperature = widget.data["temp"] ?? 0;
     final charge = widget.data["%"] ?? 0;
@@ -54,13 +62,6 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
     final bsn = widget.data["BSN"] ?? "";
     final live = (widget.data["valid"]??true).toString()=="true";
 
-    */
-    final voltage = widget.data["voltage"] ?? 0;
-    final temperature = widget.data["temperature"] ?? 0;
-    final charge = widget.data["percentage"] ?? 0;
-    final mac = widget.data["mac"] ?? "";
-    final bsn = widget.data["BSN"] ?? "";
-    final live = (widget.data["valid"]??true).toString()=="true";
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
@@ -185,20 +186,19 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
                   )
                   : OutlinedButton.icon(
                     onPressed: () async {
-                      final mac = await QRScannerWidget(context, "QR Code Battery ${widget.data["index"]}");
+                      final mac = await QRScannerWidget(context, "QR Code Battery ${widget.data["index"]??"0"}");
 
                       if (mac == null || mac.isEmpty) return;
 
                       setState(() => isLinking = true); // ✅ show loader
 
-                      await widget.macController.changeTrackr(macId: mac, index: widget.data["index"]);
+                      await widget.macController.changeTrackr(macId: "CD:94:CB:C7:F1:8D", index: widget.data["index"]??"b1");
 
                       // ⏳ keep loader for 10 seconds
                       await Future.delayed(Duration(seconds: widget.macController.interval - 1));
 
-                      if (mounted) {
                         setState(() => isLinking = false);
-                      }
+
                     },
                     icon: const Icon(Icons.link, size: 18, color: Colors.cyanAccent),
                     label: const Text("Link Battery", style: TextStyle(color: Colors.cyanAccent)),

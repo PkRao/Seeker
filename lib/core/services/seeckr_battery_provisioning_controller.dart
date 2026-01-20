@@ -19,6 +19,7 @@ class MacProgrammingController {
   late QualifiedCharacteristic _notifyDeviceInfo;
 
   StreamSubscription<List<int>>? _notifySub;
+  StreamSubscription<List<int>>? _notifySubSeeker;
 
   // UI state
   final ValueNotifier<bool> isBusy = ValueNotifier(false);
@@ -33,8 +34,7 @@ class MacProgrammingController {
   Timer? _batInfoTimer;
   bool _isBatPolling = false;
   String _notifyBuffer = "";
-  bool _liveDataActive = false;
-  String _liveDataBuffer = "";
+  String _notifSeekerInfoyBuffer = "";
 
   MacProgrammingController({
     required this.ble,
@@ -72,7 +72,7 @@ class MacProgrammingController {
   }
   /// Call ONCE after connection
   void startDeviceNotifications() {
-    _notifySub = ble.subscribeToCharacteristic(_notifyDeviceInfo).listen(
+    _notifySubSeeker = ble.subscribeToCharacteristic(_notifyDeviceInfo).listen(
       _handleNotifyDeviceInfo,
       onError: (e) {
         errorText.value = "Notify error: $e";
@@ -82,6 +82,7 @@ class MacProgrammingController {
 
   void dispose() {
     _notifySub?.cancel();
+    _notifySubSeeker?.cancel();
   }
 
   // ===============================
@@ -111,7 +112,12 @@ class MacProgrammingController {
           // final String indexStr = (map["index"] ?? "").toString().toLowerCase(); // b1
           // final int? pos = int.tryParse(indexStr.replaceAll("b", ""));
 
-          final int? pos = int.tryParse(((map["index"] ?? "--").toString().toLowerCase())[1]);
+          final int? pos = int.tryParse(
+            (map["index"] ?? "")
+                .toString()
+                .toLowerCase()
+                .replaceAll(RegExp(r'[^0-9]'), ''),
+          );
 
           if (pos == null || pos <= 0 || pos > totalBatteries) continue;
 
@@ -147,6 +153,9 @@ class MacProgrammingController {
         else if (json["ack"] == "DELETE") {
           _ackCompleter?.complete(json["status"] == "OK");
           errorText.value = "👍 Battery Deleted";
+        } else if (json["ack"] == "CLEAR") {
+          _ackCompleter?.complete(json["status"] == "OK");
+          // errorText.value = "👍 Battery Deleted";
         }
         else if (json["ack"] == "CHANGE") {
           _ackCompleter?.complete(json["status"] == "OK");
@@ -183,20 +192,22 @@ class MacProgrammingController {
   void _handleNotifyDeviceInfo(List<int> data) {
     final chunk = utf8.decode(data);
     printFunc("RAW CHUNK Device info : $chunk");
-
-    _notifyBuffer += chunk;
+if(_notifSeekerInfoyBuffer.contains(chunk)){
+  return;
+}
+    _notifSeekerInfoyBuffer += chunk;
 
     // Process buffer while it contains possible JSON
     while (true) {
-      final startIndex = _notifyBuffer.indexOf('{');
+      final startIndex = _notifSeekerInfoyBuffer.indexOf('{');
       if (startIndex == -1) return;
 
       int braceCount = 0;
       int endIndex = -1;
 
-      for (int i = startIndex; i < _notifyBuffer.length; i++) {
-        if (_notifyBuffer[i] == '{') braceCount++;
-        if (_notifyBuffer[i] == '}') braceCount--;
+      for (int i = startIndex; i < _notifSeekerInfoyBuffer.length; i++) {
+        if (_notifSeekerInfoyBuffer[i] == '{') braceCount++;
+        if (_notifSeekerInfoyBuffer[i] == '}') braceCount--;
 
         if (braceCount == 0) {
           endIndex = i;
@@ -208,11 +219,11 @@ class MacProgrammingController {
       if (endIndex == -1) return;
 
       final jsonString =
-      _notifyBuffer.substring(startIndex, endIndex + 1);
+      _notifSeekerInfoyBuffer.substring(startIndex, endIndex + 1);
 
       // Remove processed JSON from buffer
-      _notifyBuffer =
-          _notifyBuffer.substring(endIndex + 1);
+      _notifSeekerInfoyBuffer =
+          _notifSeekerInfoyBuffer.substring(endIndex + 1);
 
       _processJson(jsonString.trim());
     }
@@ -223,8 +234,10 @@ class MacProgrammingController {
   void _handleNotify(List<int> data) {
     final chunk = utf8.decode(data);
     printFunc("RAW CHUNK: $chunk");
-
-    _notifyBuffer += chunk;
+    if(_notifyBuffer.endsWith(chunk)){
+      return;
+    }
+    _notifyBuffer += chunk.toString();
 
     // Process buffer while it contains possible JSON
     while (true) {
@@ -490,7 +503,7 @@ return success;
 
     _ackCompleter = Completer<bool>();
     Duration timeout =  Duration(seconds: interval-1);
-
+printFunc("TX : ${payload}");
     try {
       await ble.writeCharacteristicWithResponse(
         _writeChar,
