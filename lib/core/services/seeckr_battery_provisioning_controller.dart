@@ -7,6 +7,7 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 class MacProgrammingController {
   final FlutterReactiveBle ble;
   final String deviceId;
+  final int interval=10;
 
   final Uuid serviceUuid;
   final Uuid writeUuid;
@@ -23,7 +24,7 @@ class MacProgrammingController {
   final ValueNotifier<bool> isBusy = ValueNotifier(false);
   final ValueNotifier<String> progressText = ValueNotifier("");
   final ValueNotifier<List<Map?> >batInfo = ValueNotifier([]);
-  final ValueNotifier<Map >deviceInfo = ValueNotifier({});
+  final ValueNotifier<Map<String,dynamic> >deviceInfo = ValueNotifier({});
   final ValueNotifier<String?> errorText = ValueNotifier(null);
 
   // ACK handling
@@ -42,12 +43,6 @@ class MacProgrammingController {
     required this.writeUuid,
     required this.notifyUuid,
     required this.seekerInfoUuid}) {
-    // ble: widget.bluetooth.ble,
-    // deviceId: widget.bluetooth.connectedDeviceId!,
-    // serviceUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120021"),
-    // writeUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120022"),
-    // notifyUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120023"),
-    // seekerInfoUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120024"),
 
     _writeChar = QualifiedCharacteristic(
       deviceId: deviceId,
@@ -104,15 +99,36 @@ class MacProgrammingController {
       if (json.containsKey("devices")) {
         final devices = json["devices"] as List;
 
-        batInfo.value = devices.map<Map<String, dynamic>>((e) {
+// Total batteries you expect
+        const int totalBatteries = 4;
+
+// Create empty slots
+        final List<Map<String, dynamic>?> ordered =
+        List.filled(totalBatteries, null);
+
+        for (final e in devices) {
           final map = Map<String, dynamic>.from(e);
+          // final String indexStr = (map["index"] ?? "").toString().toLowerCase(); // b1
+          // final int? pos = int.tryParse(indexStr.replaceAll("b", ""));
+
+          final int? pos = int.tryParse(((map["index"] ?? "--").toString().toLowerCase())[1]);
+
+          if (pos == null || pos <= 0 || pos > totalBatteries) continue;
+
           final now = DateTime.now();
           map["time"] =
           "${now.hour.toString().padLeft(2, '0')}:"
               "${now.minute.toString().padLeft(2, '0')}:"
               "${now.second.toString().padLeft(2, '0')}";
-          return map;
-        }).toList();
+
+          ordered[pos - 1] = map;   // b1 → index 0
+        }
+
+// Optional: Fill missing batteries with defaults
+        batInfo.value = List.generate(totalBatteries, (i) {
+          return ordered[i] ??
+              {};
+        });
 
         printFunc("✅ LIVE DATA PARSED (${batInfo.value.length} batteries)");
         return;
@@ -130,12 +146,12 @@ class MacProgrammingController {
         }
         else if (json["ack"] == "DELETE") {
           _ackCompleter?.complete(json["status"] == "OK");
-          errorText.value = "Battery Deleted";
+          errorText.value = "👍 Battery Deleted";
         }
         else if (json["ack"] == "CHANGE") {
           _ackCompleter?.complete(json["status"] == "OK");
           if (json["status"] == "OK") {
-            errorText.value = "👍 Battery Added";
+            errorText.value = "👍 Battery Linked";
           } else {
             errorText.value = json["reason"];
             if (_ackCompleter != null && !_ackCompleter!.isCompleted) {
@@ -155,6 +171,8 @@ class MacProgrammingController {
 
     } catch (e) {
       printFunc("❌ JSON PARSE ERROR: $e");
+      errorText.value = "❌ failed: $e";
+
     }
   }
 
@@ -164,7 +182,7 @@ class MacProgrammingController {
   // ===============================
   void _handleNotifyDeviceInfo(List<int> data) {
     final chunk = utf8.decode(data);
-    printFunc("RAW CHUNK: $chunk");
+    printFunc("RAW CHUNK Device info : $chunk");
 
     _notifyBuffer += chunk;
 
@@ -278,12 +296,13 @@ class MacProgrammingController {
 
     try {
       success = await _sendWithAck("CLEAR");
+      errorText.value = "👍 Configuration cleared";
 
       if (!success) {
-        errorText.value = "Clear all batteries failed";
+        errorText.value = "❌ Failed to Clear configuration";
       }
     } catch (e) {
-      errorText.value = "Clear failed: $e";
+      errorText.value = "❌ Clear Config failed: $e";
       printFunc("Exception clear all : ${errorText.value}");
       success = false;
     }
@@ -295,21 +314,27 @@ class MacProgrammingController {
   // ===============================
   // De Link Tracker
   // ===============================
-  Future<void> deleteTrackr(String index) async {
+  Future<bool> deleteTrackr(String index) async {
     isBusy.value = true;
     errorText.value = null;
 printFunc("DELETE-$index\n");
+    bool success = false;
 
     try {
-      await ble.writeCharacteristicWithResponse(
-        _writeChar,
-        value: utf8.encode("DELETE-$index\n"));
+      success = await _sendWithAck("DELETE-$index");
+      errorText.value = "👍 Battery ${index.toUpperCase()} unlinked.";
+
+      if (!success) {
+        errorText.value = "❌ Failed to unlink battery (${index.toUpperCase()})";
+      }
     } catch (e) {
-      errorText.value = "Delete failed: $e";
-      printFunc("Exception clear all : ${errorText.value}");
+      errorText.value = "❌ Unlink failed: $e";
+      printFunc("Unlink clear all : ${errorText.value}");
+      success = false;
     }
 
     isBusy.value = false;
+return success;
   }
 
   // ===============================
@@ -348,7 +373,8 @@ printFunc("DELETE-$index\n");
         }
 
         if (attempt == retryCount) {
-          errorText.value = "Failed at B$index (MAC: ${macList[i]})";
+          errorText.value = "❌ Failed to link battery (B${index} MAC: ${macList[i]})";
+
           isBusy.value = false;
           success=false;
         }
@@ -356,7 +382,7 @@ printFunc("DELETE-$index\n");
 
     }
 
-    progressText.value = "✅ All MACs programmed";
+    progressText.value = "👍 All Batteries Configured";
     isBusy.value = false;
     printFunc("${progressText.value }");
     return success;
@@ -391,18 +417,21 @@ printFunc("DELETE-$index\n");
 
         if (ack) {
           success = true;
+          errorText.value =  "👍 Battery liked";
+
           break;
         }
 
         if (attempt == 2) {
-          errorText.value = "Failed at B$index (MAC: ${macId})";
+          errorText.value = "❌ Failed to link battery (${index.toUpperCase()})";
+
           isBusy.value = false;
           success=false;
         }
 
     }
 
-    progressText.value = "✅ All MACs programmed";
+    // progressText.value = "👍 Battery liked";
     isBusy.value = false;
     printFunc("${progressText.value }");
     return success;
@@ -420,7 +449,7 @@ printFunc("DELETE-$index\n");
       await _readBatInfoWithAck(payload);
     }
 
-    _batInfoTimer = Timer.periodic(const Duration(seconds: 10), (_) async {
+    _batInfoTimer = Timer.periodic( Duration(seconds: interval), (_) async {
       if (isBusy.value) return;
 
       await _readBatInfoWithAck(payload);
@@ -457,11 +486,10 @@ printFunc("DELETE-$index\n");
   // Read BAt WITH ACK + TIMEOUT
   // ===============================
   Future<bool> _readBatInfoWithAck(
-      String payload, {
-        Duration timeout = const Duration(seconds: 10),
-      }) async {
+      String payload) async {
 
     _ackCompleter = Completer<bool>();
+    Duration timeout =  Duration(seconds: interval-1);
 
     try {
       await ble.writeCharacteristicWithResponse(
