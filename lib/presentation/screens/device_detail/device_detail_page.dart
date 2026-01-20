@@ -55,10 +55,12 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
         deviceId: widget.bluetooth.connectedDeviceId!,
         serviceUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120021"),
         writeUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120022"),
-        notifyUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120023"),
+        notifyUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120024"),
+        seekerInfoUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120024"),
       );
 
       macController.startNotifications();
+      macController.startDeviceNotifications();
       macController.startBatInfoPolling();
 
 
@@ -220,6 +222,20 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                                   widget.bluetooth.connectedDevice?.id ?? "-",
                                   style: const TextStyle(fontSize: 14, color: Colors.white70),
                                 ),
+                                ValueListenableBuilder<Map>(
+                                  valueListenable: macController.deviceInfo,
+                                  builder: (_, deviceInfo, __) {
+                                    printFunc("BAT Info ${deviceInfo}");
+                                    getSize(context);
+                                    if (deviceInfo.isEmpty) {
+                                      return const Center(child: Text("-"));
+                                    }
+                                  else
+                                  {
+                                    return  Center(child: Text("${deviceInfo["SerialNo"]}"));
+                                  }}),
+
+
                               ],
                             ),
                           ],
@@ -228,8 +244,10 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                           width: 48,
                           height: 48,
                           child: RotatingRefreshButton(
-                            onPressed: () {
-                              macController.startBatInfoPolling();
+                            onPressed: () async {
+                              macController.stopBatInfoPolling();
+                              await macController.getSeekrInfo();
+                              // macController.startBatInfoPolling();
                             },
                           ),
                         ),
@@ -466,6 +484,7 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
               ValueListenableBuilder<List<Map?>>(
                 valueListenable: macController.batInfo,
                 builder: (_, batInfo, __) {
+                  printFunc("BAT Info ${batInfo}");
                   getSize(context);
                   if (batInfo.isEmpty) {
                     return const Center(child: Text("No data"));
