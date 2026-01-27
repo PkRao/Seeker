@@ -192,7 +192,7 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
 
                       setState(() => isLinking = true); // ✅ show loader
 
-                      await widget.macController.changeTrackr(macId: "CD:94:CB:C7:F1:8D", index: widget.data["index"]??"b1");
+                      await widget.macController.changeTrackr(macId: mac, index: widget.data["index"]??"b1");
 
                       // ⏳ keep loader for 10 seconds
                       await Future.delayed(Duration(seconds: widget.macController.interval - 1));

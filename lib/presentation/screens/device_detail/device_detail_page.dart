@@ -449,7 +449,10 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                                   ? () async {
                                 // 👉 Proceed action
                                 printFunc("Proceed clicked with MACs: $list");
-
+                                // list[0]="C2:9B:27:7F:50:00";
+                                // list[1]="DD:18:AD:D4:BD:04";
+                                // list.add("C2:9B:27:7F:50:09");
+                                // list.add("C3:76:63:4E:4B:19");
                                 setState(() {  configMAc = false;
                                 isLoading=true;
                                 assignBat = false;
