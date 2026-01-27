@@ -57,16 +57,19 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
         deviceId: widget.bluetooth.connectedDeviceId!,
         serviceUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120021"),
         writeUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120022"),
-        notifyUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120024"),
+        notifyUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120023"),
         seekerInfoUuid: Uuid.parse("f043176a-5168-11ee-be56-0242ac120024"),
       );
+      macController.errorText.addListener(_errorListener);
 
       macController.startNotifications();
       macController.startDeviceNotifications();
+      macController.getSeekrInfo();
+      Future.delayed(const Duration(seconds: 5));
+
       macController.startBatInfoPolling();
 
 
-      macController.errorText.addListener(_errorListener);
     } catch (_) {}
   }
 
@@ -134,8 +137,10 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                       isLoading=true;
 
                     });
-                    if (await macController.clearAllMacs())
+                    if (await macController.clearAllMacs()) {
                       macController.batInfo.value = [];
+                      macController.getSeekrInfo();
+                    }
                     setState(() {
                       isLoading=false;
 
@@ -255,6 +260,11 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                           height: 48,
                           child: RotatingRefreshButton(
                             onPressed: () async {
+                              printFunc("bussy status : ${macController.isBusy.value}");
+                              printFunc("isLoading status : ${isLoading}");
+                              setState(() {
+
+                              });
                               macController.stopBatInfoPolling();
                               await macController.getSeekrInfo();
                               macController.startBatInfoPolling();
@@ -439,14 +449,23 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                                   ? () async {
                                 // 👉 Proceed action
                                 printFunc("Proceed clicked with MACs: $list");
-                                configMAc = false;
-                                setState(() {});
+                                // list[0]="C2:9B:27:7F:50:00";
+                                // list[1]="DD:18:AD:D4:BD:04";
+                                // list.add("C2:9B:27:7F:50:09");
+                                // list.add("C3:76:63:4E:4B:19");
+                                setState(() {  configMAc = false;
+                                isLoading=true;
+                                assignBat = false;
+                                });
                                 // call API / navigate / start BLE config here
                                 await macController.programMacs(macList: list);
+                                await macController.getSeekrInfo();
+
                                 setState(() {
                                   assignBat = false;
                                   list.clear();
                                   configMAc = false;
+                                  isLoading=false;
                                 });
                               }
                                   : null, // disabled if not enough batteries
@@ -517,7 +536,16 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                     valueListenable: macController.isBusy,
                     builder: (_, isbussy, __) {
                       getSize(context);
-                      if (!isbussy&&isLoading) {
+                      if (isbussy&&isLoading) {
+                        return const Center(
+                          child: SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.cyanAccent),
+                          ),
+                        ); }
+                      else {
+
                         if (batInfo.isEmpty) {
                           return const Center(child: Text("No data"));
                         }
@@ -540,15 +568,7 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                             },
                           ),
                         );
-                      }
-                      else {
-                        return const Center(
-                          child: SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.cyanAccent),
-                          ),
-                        );
+
                       }
                     },
                   );

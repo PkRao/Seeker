@@ -22,6 +22,7 @@ Future<void> _requestPermissions() async {
   await Permission.bluetoothScan.request();
   await Permission.bluetoothConnect.request();
   await Permission.camera.request();
+
 }
 
 class SeekrApp extends StatelessWidget {
