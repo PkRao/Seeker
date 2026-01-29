@@ -77,8 +77,20 @@ class _DeviceCardAnimatedState extends State<DeviceCardAnimated> with SingleTick
             }
           },
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          title: Text(widget.name, style: const TextStyle(color: Colors.white)),
-          subtitle: Text(widget.id, style: const TextStyle(color: Colors.white70)),
+          title: Text(
+            widget.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            softWrap: false,
+            style: const TextStyle(color: Colors.white),
+          ),
+          subtitle: Text(
+            widget.id,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            softWrap: false,
+            style: const TextStyle(color: Colors.white70),
+          ),
           leading: Container(
             width: 48,
             height: 48,
@@ -164,9 +176,7 @@ class _DeviceCardAnimatedState extends State<DeviceCardAnimated> with SingleTick
 
                         // parent (dashboard) will be notified through widget.onConnected()
                         connecting = false;
-                        if (mounted)
-                        setState(() {
-                        });
+                        if (mounted) setState(() {});
 
                         if (ok) {
                           widget.onConnected();

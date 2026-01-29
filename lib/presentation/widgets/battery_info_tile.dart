@@ -60,8 +60,7 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
     final charge = widget.data["%"] ?? 0;
     final mac = widget.data["mac"] ?? "";
     final bsn = widget.data["BSN"] ?? "";
-    final live = (widget.data["valid"]??true).toString()=="true";
-
+    final live = (widget.data["valid"] ?? true).toString() == "true";
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
@@ -80,10 +79,12 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
             border: Border.all(color: isLinked ? Colors.white54 : Colors.white24, width: 2),
             boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 18, offset: Offset(0, 6))],
           ),
-          child:
-              isLinked
-                  ? _linkedUI(context, live, bsn, mac, charge * 1.0, voltage, temperature)
-                  : _notLinkedUI(context),
+          child: SingleChildScrollView(
+            child:
+                isLinked
+                    ? _linkedUI(context, live, bsn, mac, charge * 1.0, voltage, temperature)
+                    : _notLinkedUI(context),
+          ),
         ),
       ),
     );
@@ -139,13 +140,28 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
 
         const SizedBox(height: 6),
         Text("ID: $bsn", style: const TextStyle(color: Colors.white70, fontSize: 13)),
-        Text("Tracker: $mac", style: const TextStyle(color: Colors.white54, fontSize: 12)),
+
+        Text(
+          "ID: $bsn",
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          softWrap: false,
+          style: const TextStyle(color: Colors.white70, fontSize: 13),
+        ),
+
+        Text(
+          "Tracker: $mac",
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          softWrap: false,
+          style: const TextStyle(color: Colors.white54, fontSize: 12),
+        ),
 
         const SizedBox(height: 18),
         Container(height: 1, color: Colors.white24),
         const SizedBox(height: 14),
 
-        _valueTile("Charge", "${charge.toStringAsFixed(2)}%", batteryColor(charge)),
+        _valueTile("Charge", "${charge.toStringAsFixed(2)} %", batteryColor(charge)),
         const SizedBox(height: 12),
 
         _valueTile("Voltage", "${(voltage / 100).toStringAsFixed(2)} V", Colors.blueAccent),
@@ -186,19 +202,24 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
                   )
                   : OutlinedButton.icon(
                     onPressed: () async {
-                      final mac = await QRScannerWidget(context, "QR Code Battery ${widget.data["index"]??"0"}");
+                      final mac = await QRScannerWidget(
+                        context,
+                        "QR Code Battery ${widget.data["index"] ?? "0"}",
+                      );
 
                       if (mac == null || mac.isEmpty) return;
 
                       setState(() => isLinking = true); // ✅ show loader
 
-                      await widget.macController.changeTrackr(macId: mac, index: widget.data["index"]??"b1");
+                      await widget.macController.changeTrackr(
+                        macId: mac,
+                        index: widget.data["index"] ?? "b1",
+                      );
 
                       // ⏳ keep loader for 10 seconds
                       await Future.delayed(Duration(seconds: widget.macController.interval - 1));
 
-                        setState(() => isLinking = false);
-
+                      setState(() => isLinking = false);
                     },
                     icon: const Icon(Icons.link, size: 18, color: Colors.cyanAccent),
                     label: const Text("Link Battery", style: TextStyle(color: Colors.cyanAccent)),

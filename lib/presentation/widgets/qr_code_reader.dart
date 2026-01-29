@@ -88,8 +88,8 @@
 //   }
 // }
 
-
 import 'dart:ui';
+
 import 'package:dfi_seekr/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -97,10 +97,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 /// ===============================
 /// QR SCANNER DIALOG FUNCTION
 /// ===============================
-Future<String?> QRScannerWidget(
-    BuildContext context,
-    String title,
-    ) {
+Future<String?> QRScannerWidget(BuildContext context, String title) {
   return showDialog<String>(
     barrierDismissible: false,
     context: context,
@@ -112,11 +109,7 @@ Future<String?> QRScannerWidget(
           elevation: 6,
           title: Text(
             title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
           ),
           content: const QRScannerScreen(),
         ),
@@ -142,9 +135,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   bool showInvalidMsg = false;
 
   // ✅ MAC ADDRESS REGEX
-  final RegExp macRegex = RegExp(
-    r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$',
-  );
+  final RegExp macRegex = RegExp(r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$');
 
   void _onDetect(BarcodeCapture capture) {
     if (isScanned) return;
@@ -190,11 +181,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             padding: EdgeInsets.only(bottom: 8),
             child: Text(
               "Scan valid MAC ID",
-              style: TextStyle(
-                color: Colors.redAccent,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.w500),
             ),
           ),
 
@@ -203,10 +190,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           height: size.width * 0.85,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: MobileScanner(
-              controller: controller,
-              onDetect: _onDetect,
-            ),
+            child: MobileScanner(controller: controller, onDetect: _onDetect),
           ),
         ),
       ],

@@ -1,7 +1,7 @@
 import 'package:dfi_seekr/core/constants/app_colors.dart';
 import 'package:flutter/cupertino.dart';
 
-Widget ring(double size, double delay, double opacity,_controller) {
+Widget ring(double size, double delay, double opacity, _controller) {
   return AnimatedBuilder(
     animation: _controller,
     builder: (context, child) {

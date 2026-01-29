@@ -17,8 +17,7 @@ class BluetoothService {
   FlutterReactiveBle get ble => _ble;
   final Map<String, DiscoveredDevice> _devices = {};
   final Map<String, bool> connectionStatus = {};
-  final ValueNotifier<Map<String, bool>> connectionStatusNotifier =
-  ValueNotifier({});
+  final ValueNotifier<Map<String, bool>> connectionStatusNotifier = ValueNotifier({});
 
   final Map<String, StreamSubscription<ConnectionStateUpdate>> _connectionSubs = {};
 
@@ -39,7 +38,7 @@ class BluetoothService {
   }
 
   // ---------------- SCAN ----------------
-  void startScan({Duration timeout = const Duration(seconds: 30)}) {
+  void startScan({Duration timeout = const Duration(seconds: 10)}) {
     _devices.clear();
     stopScan();
 
@@ -68,6 +67,7 @@ class BluetoothService {
             printFunc("device id : ${device.id} - state : ${connectionStatus[lastId]} ");
             if (lastId == device.id && connectionStatus[lastId] == false) {
               autoConnect = true;
+              stopScan();
             }
             _emitDevices();
           },
@@ -90,6 +90,7 @@ class BluetoothService {
 
   // ---------------- CONNECT ----------------
   Future<bool> connect(String deviceId) async {
+    stopScan();
     printFunc("Connecting to $deviceId");
 
     await _connectionSubs[deviceId]?.cancel();
@@ -103,64 +104,65 @@ class BluetoothService {
         .connectToDevice(id: deviceId, connectionTimeout: const Duration(seconds: 12))
         .listen(
           (ConnectionStateUpdate update) async {
-        printFunc("REAL-TIME CONNECT STATE: ${update.connectionState} - ${update.connectionState == DeviceConnectionState.connected}");
+            printFunc(
+              "REAL-TIME CONNECT STATE: ${update.connectionState} - ${update.connectionState == DeviceConnectionState.connected}",
+            );
 
-        if (update.connectionState == DeviceConnectionState.connected) {
-          printFunc("✅ Connected to $deviceId");
+            if (update.connectionState == DeviceConnectionState.connected) {
+              printFunc("✅ Connected to $deviceId");
 
-          connectionStatus[deviceId] = true;
-          connectionStatusNotifier.value = Map.from(connectionStatus); // ✅ ADD
+              connectionStatus[deviceId] = true;
+              connectionStatusNotifier.value = Map.from(connectionStatus); // ✅ ADD
 
-          connectedDeviceId = deviceId;
-          connectedDevice = _devices[deviceId] ?? connectedDevice;
-          isConnected.value = true;
-          HiveService().saveString(HiveService.lastSavedDevice, deviceId);
+              connectedDeviceId = deviceId;
+              connectedDevice = _devices[deviceId] ?? connectedDevice;
+              isConnected.value = true;
+              HiveService().saveString(HiveService.lastSavedDevice, deviceId);
 
-          if (_devices[deviceId] == null && connectedDevice != null) {
-            _devices[deviceId] = connectedDevice!;
-          }
+              if (_devices[deviceId] == null && connectedDevice != null) {
+                _devices[deviceId] = connectedDevice!;
+              }
 
-          _emitDevices();
+              _emitDevices();
 
-          if (!seenConnected) {
-            seenConnected = true;
-            if (!completer.isCompleted) completer.complete(true);
-          }
-        }
+              if (!seenConnected) {
+                seenConnected = true;
+                if (!completer.isCompleted) completer.complete(true);
+              }
+            }
 
-        if (update.connectionState == DeviceConnectionState.disconnected) {
-          if (!seenConnected && ignoreFirstFalseDisconnect) {
-            ignoreFirstFalseDisconnect = false;
-            printFunc("⚠️ Ignored transient disconnect for $deviceId");
-            return;
-          }
+            if (update.connectionState == DeviceConnectionState.disconnected) {
+              if (!seenConnected && ignoreFirstFalseDisconnect) {
+                ignoreFirstFalseDisconnect = false;
+                printFunc("⚠️ Ignored transient disconnect for $deviceId");
+                return;
+              }
 
-          printFunc("❌ Real disconnect from $deviceId");
+              printFunc("❌ Real disconnect from $deviceId");
 
-          connectionStatus[deviceId] = false;
-          connectionStatusNotifier.value = Map.from(connectionStatus); // ✅ ADD
-  printFunc("Conection notifier : ${ connectionStatusNotifier.value["7C:00:37:A1:71:AA"]}");
-          if (connectedDeviceId == deviceId) {
-            connectedDeviceId = null;
-            connectedDevice = null;
-            isConnected.value = false;
-          }
-          if (!completer.isCompleted) completer.complete(false);
+              connectionStatus[deviceId] = false;
+              connectionStatusNotifier.value = Map.from(connectionStatus); // ✅ ADD
+              printFunc("Conection notifier : ${connectionStatusNotifier.value["7C:00:37:A1:71:AA"]}");
+              if (connectedDeviceId == deviceId) {
+                connectedDeviceId = null;
+                connectedDevice = null;
+                isConnected.value = false;
+              }
+              if (!completer.isCompleted) completer.complete(false);
 
-          _emitDevices();
+              _emitDevices();
+            }
+          },
+          onError: (err) {
+            printFunc("❌ Connection Error: $err");
 
-        }
-      },
-      onError: (err) {
-        printFunc("❌ Connection Error: $err");
+            connectionStatus[deviceId] = false;
+            connectionStatusNotifier.value = Map.from(connectionStatus); // ✅ ADD
 
-        connectionStatus[deviceId] = false;
-        connectionStatusNotifier.value = Map.from(connectionStatus); // ✅ ADD
-
-        _emitDevices();
-        if (!completer.isCompleted) completer.complete(false);
-      },
-    );
+            _emitDevices();
+            if (!completer.isCompleted) completer.complete(false);
+          },
+        );
 
     _connectionSubs[deviceId] = sub;
 
@@ -176,6 +178,73 @@ class BluetoothService {
     return result;
   }
 
+  // ---------------- Restore Connection ---------------- not in use
+
+  /*
+  Future<void> restoreConnection() async {
+    final lastId = HiveService().getString(HiveService.lastSavedDevice);
+
+    if (lastId == null || lastId.isEmpty) {
+      printFunc("No previous device to restore");
+      return;
+    }
+
+    printFunc("🔄 Restoring BLE connection to $lastId");
+
+    try {
+      // 🟡 Ensure device exists in device list even if scan doesn't emit
+      _devices.putIfAbsent(
+        lastId,
+            () => DiscoveredDevice(
+          id: lastId,
+          name: "Previously Connected Device",
+          serviceUuids: [],
+          manufacturerData: Uint8List.fromList([0x01, 0x02]),
+          rssi: 0, serviceData: {},
+        ),
+      );
+
+      _emitDevices();
+
+      // Force disconnect ghost connection
+      await disconnect(lastId);
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      // Fresh reconnect
+      final ok = await connect(lastId);
+
+      if (ok) {
+        printFunc("✅ Connection restored successfully");
+      } else {
+        printFunc("⚠️ Restore reconnect failed, starting scan");
+        startScan();
+      }
+    } catch (e) {
+      printFunc("❌ Restore failed: $e");
+      startScan();
+    }
+  }
+*/
+
+  // ---------------- Disconnect previous connection ----------------
+  Future<void> cleanupStaleConnection() async {
+    final lastId = HiveService().getString(HiveService.lastSavedDevice);
+
+    if (lastId == null || lastId.isEmpty) {
+      printFunc("No previous connection to cleanup");
+      return;
+    }
+
+    printFunc("🧹 Cleaning stale BLE connection for $lastId");
+
+    try {
+      await disconnect(lastId);
+      await Future.delayed(const Duration(milliseconds: 500));
+    } catch (e) {
+      printFunc("Cleanup error: $e");
+    }
+  }
+
   // ---------------- AUTO RECONNECT ----------------
   Future<void> autoReconnect(String deviceId) async {
     printFunc("AUTO RECONNECT TRY → $deviceId");
@@ -188,7 +257,6 @@ class BluetoothService {
 
   // ---------------- DISCONNECT ----------------
   Future<void> disconnect(String deviceId) async {
-
     // ✅ Cancel BLE connection stream (this disconnects device)
     await _connectionSubs[deviceId]?.cancel();
     _connectionSubs.remove(deviceId);
@@ -200,7 +268,6 @@ class BluetoothService {
       connectedDeviceId = null;
       connectedDevice = null;
       isConnected.value = false;
-
     }
     connectionStatusNotifier.value = Map.from(connectionStatus); // ✅ notify UI
 
@@ -224,6 +291,3 @@ class BluetoothService {
     _devicesController.close();
   }
 }
-
-
-

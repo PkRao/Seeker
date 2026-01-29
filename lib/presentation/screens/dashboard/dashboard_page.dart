@@ -208,13 +208,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
 // dashboard.dart
 import 'dart:async';
-import 'dart:ui';
 
-import 'package:dfi_seekr/core/constants/app_colors.dart';
 import 'package:dfi_seekr/core/services/generalMethods.dart';
 import 'package:dfi_seekr/core/services/hive_service.dart';
 import 'package:dfi_seekr/core/utils/logger.dart';
-import 'package:dfi_seekr/presentation/widgets/qr_code_reader.dart';
 import 'package:dfi_seekr/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
@@ -325,7 +322,6 @@ class _DashboardPageState extends State<DashboardPage> {
     devicesNotifier.value = updated;
   }
 
-
   @override
   Widget build(BuildContext context) {
     getSize(context);
@@ -358,6 +354,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ],
                 ),
           ),
+
           // const SizedBox(height: 16),
           // ElevatedButton(
           //   onPressed: () async {
@@ -366,21 +363,26 @@ class _DashboardPageState extends State<DashboardPage> {
           //   },
           //   child: Text("Testing Button", style: TextStyle(color: Colors.white54)),
           // ),
-
           Expanded(
             child: ValueListenableBuilder<List<DiscoveredDevice>>(
               valueListenable: devicesNotifier,
               builder: (context, devices, _) {
                 if (devices.isEmpty) {
                   return Center(
-
-                    child: Column(mainAxisSize: MainAxisSize.min,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        GlowBluetoothIcon(scanning: false,icon:  Image.asset('assets/images/dreamFly2.jpg'),width: 200, height: 200),
+                        GlowBluetoothIcon(
+                          scanning: false,
+                          icon: Image.asset('assets/images/dreamFly2.jpg'),
+                          width: 200,
+                          height: 200,
+                        ),
 
-                        const Text("No devices found\n\n\n\n\n\n\n",
-                            style: TextStyle(fontSize: 18, color: Colors.white54)),
-
+                        const Text(
+                          "No devices found\n\n\n\n\n\n\n",
+                          style: TextStyle(fontSize: 18, color: Colors.white54),
+                        ),
                       ],
                     ),
                   );
@@ -389,7 +391,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 return ValueListenableBuilder<Map<String, bool>>(
                   valueListenable: _bluetooth.connectionStatusNotifier, // ✅ LISTEN
                   builder: (context, statusMap, _) {
-                    printFunc("Conection notifier updated : ${ statusMap["7C:00:37:A1:71:AA"]}");
+                    printFunc("Conection notifier updated : ${statusMap["7C:00:37:A1:71:AA"]}");
 
                     return ListView.builder(
                       itemCount: devices.length,

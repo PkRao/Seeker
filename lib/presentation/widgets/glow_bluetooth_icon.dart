@@ -8,7 +8,7 @@ class GlowBluetoothIcon extends StatefulWidget {
   final double height;
   final double width;
 
-  const GlowBluetoothIcon({super.key, this.scanning = false, this.icon,  this.height=80,  this.width=80});
+  const GlowBluetoothIcon({super.key, this.scanning = false, this.icon, this.height = 80, this.width = 80});
 
   @override
   State<GlowBluetoothIcon> createState() => _GlowBluetoothIconState();
@@ -68,7 +68,7 @@ class _GlowBluetoothIconState extends State<GlowBluetoothIcon> with SingleTicker
           if (widget.scanning) _ring(60, 0.24, 0.2),
           ScaleTransition(
             scale: _scaleAnim,
-            child:widget.icon?? Icon(Icons.bluetooth, size: 35, color: AppColors.neonBlue),
+            child: widget.icon ?? Icon(Icons.bluetooth, size: 35, color: AppColors.neonBlue),
           ),
         ],
       ),
