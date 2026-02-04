@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dfi_seekr/core/utils/logger.dart';
+import 'package:dfi_seekr/presentation/widgets/dialogBox.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 
 class MacProgrammingController {
@@ -38,6 +38,7 @@ class MacProgrammingController {
   bool _isBatPolling = false;
   String _notifyBuffer = "";
   String _notifSeekerInfoyBuffer = "";
+  String? _lastChangeErrorReason;
 
   MacProgrammingController({
     required this.ble,
@@ -161,14 +162,24 @@ class MacProgrammingController {
           _ackCompleter?.complete(json["status"] == "OK");
           if (json["status"] == "OK") errorText.value = "👍 Battery Deleted";
         } else if (json["ack"] == "CLEAR") {
+          _lastChangeErrorReason = "";
           _ackCompleter?.complete(json["status"] == "OK");
           // errorText.value = "👍 Battery Deleted";
         } else if (json["ack"] == "CHANGE") {
-          _ackCompleter?.complete(json["status"] == "OK");
           if (json["status"] == "OK") {
+            _ackCompleter?.complete(json["status"] == "OK");
+
             errorText.value = "👍 Battery Linked";
+          } else if (json["status"] == "WAIT") {
           } else {
-            errorText.value = json["reason"];
+            errorText.value = json["reason"].toString();
+            _lastChangeErrorReason = json["reason"].toString();
+
+            printFunc("Change ack : ${json["reason"]}");
+            printFunc("Change ack error: ${errorText.value}");
+            Future.delayed(Duration(milliseconds: 500));
+            _ackCompleter?.complete(json["status"] == "OK");
+
             if (_ackCompleter != null && !_ackCompleter!.isCompleted) {
               _ackCompleter!.complete(false);
             }
@@ -195,9 +206,10 @@ class MacProgrammingController {
   void _handleNotifyDeviceInfo(List<int> data) {
     final chunk = utf8.decode(data);
     printFunc("RAW CHUNK Device info : $chunk");
-    // if(_notifSeekerInfoyBuffer.endsWith(chunk)){
-    //   return;
-    // }
+    if (_notifSeekerInfoyBuffer.endsWith(chunk)) {
+      errorText.value = 'Chunk repeated';
+      return;
+    }
     _notifSeekerInfoyBuffer += chunk;
 
     // Process buffer while it contains possible JSON
@@ -236,9 +248,10 @@ class MacProgrammingController {
   void _handleNotify(List<int> data) {
     final chunk = utf8.decode(data);
     printFunc("RAW CHUNK: $chunk");
-    // if(_notifyBuffer.endsWith(chunk)){
-    //   return;
-    // }
+    if (_notifyBuffer.endsWith(chunk)) {
+      errorText.value = 'Chunk repeated';
+      return;
+    }
     _notifyBuffer += chunk.toString();
 
     // Process buffer while it contains possible JSON
@@ -394,16 +407,22 @@ class MacProgrammingController {
   // ===============================
   // Change/Replace Bat
   // ===============================
-  Future<bool> changeTrackr({required String macId, required String index}) async {
+  Future<bool> changeTrackr(
+    BuildContext context, {
+    required String macId,
+    required String index,
+    required bool safePair,
+  }) async {
     isBusy.value = true;
     errorText.value = null;
+    _lastChangeErrorReason = "";
 
     bool success = false;
 
     progressText.value = "Sending $index";
 
     for (int attempt = 1; attempt <= 2; attempt++) {
-      final payload = "CHANGE-$index,${macId}";
+      final payload = "CHANGE-$index,${macId},${safePair}";
       // {
       //   "cmd": "SET_MAC",
       //   "index": "B$index",
@@ -412,7 +431,7 @@ class MacProgrammingController {
       // };
 
       final ack = await _sendWithAck(payload);
-
+      printFunc("ACK FROM CHANGE : $ack , ${errorText.value}");
       if (ack) {
         success = true;
         errorText.value = "👍 Battery liked";
@@ -420,12 +439,36 @@ class MacProgrammingController {
         break;
       }
 
-      if (attempt == 2) {
-        errorText.value = "❌ Failed to link battery (${index.toUpperCase()})";
+      if (attempt == 1) {
+        errorText.value = "Retrying to Link Battery (${index.toUpperCase()})";
+      } else if (attempt == 2) {
+        Future.delayed(Duration(milliseconds: 300));
+        printFunc("Attempt 2 is done :: \n${_lastChangeErrorReason} : safe : $safePair");
+        if ((_lastChangeErrorReason == "DEVICE_NOT_AVAILABLE") && safePair) {
+          popUpDialog(
+            context,
+            "No",
+            "Yes",
+            title: "Warning",
+            content: "Battery is not live\nDo you want to pair anyways?",
+            onPressBtn2: () async {
+              printFunc("YEs pair"); //     () async {
+              Navigator.of(context, rootNavigator: true).pop();
+              await changeTrackr(context, macId: macId, index: index, safePair: false);
+            },
+            onPressBtn1: () {
+              printFunc("No pair"); //     () async {
 
-        isBusy.value = false;
-        success = false;
-        return success;
+              Navigator.of(context, rootNavigator: true).pop();
+            },
+          );
+        } else {
+          errorText.value = "❌ Failed to link battery (${index.toUpperCase()})";
+
+          isBusy.value = false;
+          success = false;
+          return success;
+        }
       }
     }
 

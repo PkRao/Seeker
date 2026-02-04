@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:dfi_seekr/core/constants/app_colors.dart';
@@ -6,6 +7,7 @@ import 'package:dfi_seekr/core/services/generalMethods.dart';
 import 'package:dfi_seekr/core/services/seeckr_battery_provisioning_controller.dart';
 import 'package:dfi_seekr/core/utils/logger.dart';
 import 'package:dfi_seekr/presentation/widgets/animated_gradient_button.dart';
+import 'package:dfi_seekr/presentation/widgets/dialogBox.dart';
 import 'package:dfi_seekr/presentation/widgets/qr_code_reader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
@@ -30,6 +32,8 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
   late MacProgrammingController macController;
   bool assignBat = false;
   bool isLoading = false;
+  bool isLiveData = false;
+  String previuserror = "";
 
   List<String> list = [];
   bool configMAc = false;
@@ -68,12 +72,20 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
       Future.delayed(const Duration(seconds: 5));
 
       macController.startBatInfoPolling();
+      Future.delayed(const Duration(seconds: 16), () {
+        isLiveData = true;
+      });
+      Timer.periodic(Duration(seconds: 60), (_) async {
+        previuserror = "";
+      });
     } catch (_) {}
   }
 
   void _errorListener() {
     final msg = macController.errorText.value;
-    if (msg != null && msg.isNotEmpty && mounted) {
+
+    if (previuserror != msg && msg != null && msg.isNotEmpty && mounted) {
+      previuserror = msg;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(msg, style: TextStyle(color: AppColors.lightBg)),
@@ -127,11 +139,67 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                 ),
                 onSelected: (value) async {
                   if (value == 1) {
-                    // ⚙ Configure Batteries
-                    await Future.delayed(const Duration(milliseconds: 300));
-                    setState(() {
-                      assignBat = !assignBat;
-                    });
+                    if (macController.deviceInfo.value.isEmpty) {
+                      await Future.delayed(const Duration(milliseconds: 1500));
+                    }
+                    if (macController.deviceInfo.value.isNotEmpty) {
+                      // ⚙ Configure Batteries
+                      popUpDialog(
+                        context,
+                        "Ok",
+                        "",
+                        title: "Warning",
+                        content: '''\nYou need to scan QR codes, one by one, in the correct sequence.
+Please proceed carefully while scanning, as the scanning order is important.''',
+                        onPressBtn2: () async {
+                          printFunc("YEs pair"); //     () async {
+                          Navigator.of(context, rootNavigator: true).pop();
+                        },
+                        onPressBtn1: () async {
+                          printFunc("No pair"); //     () async {
+
+                          Navigator.of(context, rootNavigator: true).pop();
+
+                          setState(() {
+                            assignBat = true;
+                          });
+                          await Future.delayed(const Duration(milliseconds: 1200));
+
+                          list.clear();
+                          setState(() {
+                            configMAc = false;
+                          });
+
+                          for (int i = 0; i < macController.deviceInfo.value["Batteries"]; i++) {
+                            final mac = await QRScannerWidget(context, "QR Code Battery ${i + 1}");
+                            printFunc("returned mac : $mac");
+                            setState(() {
+                              if (!(list.contains(mac)))
+                                list.add(mac ?? "");
+                              else {
+                                if (list.contains(mac)) {
+                                  list.add("");
+                                }
+                              }
+                            });
+                            // if (mac != null && mac.isNotEmpty) {
+
+                            // }
+                            printFunc("List : $list");
+                            await Future.delayed(const Duration(milliseconds: 800)); // optional gap
+                          }
+                          setState(() {
+                            if (list.length.toString() ==
+                                    (macController.deviceInfo.value["Batteries"].toString()) &&
+                                list.every((e) => e.isNotEmpty)) {
+                              configMAc = true;
+                            } else if (list.isEmpty) {
+                              assignBat = false;
+                            }
+                          });
+                        },
+                      );
+                    }
                   } else if (value == 2) {
                     // 🧹 Clear All Batteries
                     setState(() {
@@ -242,7 +310,30 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                                     if (deviceInfo.isEmpty) {
                                       return const Center(child: Text("-"));
                                     } else {
-                                      return Center(child: Text("${deviceInfo["SerialNo"]}"));
+                                      return Row(
+                                        children: [
+                                          Center(
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.battery_unknown_outlined,
+                                                  color: Colors.amberAccent,
+                                                ),
+                                                Text(
+                                                  "${deviceInfo["Batteries"]}",
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: Colors.amber,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Center(child: Text("${deviceInfo["SerialNo"] ?? " ----"}")),
+                                        ],
+                                      );
                                     }
                                   },
                                 ),
@@ -325,58 +416,58 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
 
                         // Divider line
                         Container(height: 1, color: Colors.white.withOpacity(0.16)),
-                        const SizedBox(height: 18),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () async {
-                                list.clear();
-                                setState(() {
-                                  configMAc = false;
-                                });
-
-                                for (int i = 0; i < 2; i++) {
-                                  final mac = await QRScannerWidget(context, "QR Code Battery ${i + 1}");
-                                  if (mac != null && mac.isNotEmpty) {
-                                    setState(() {
-                                      list.add(mac);
-                                    });
-                                  }
-
-                                  await Future.delayed(const Duration(milliseconds: 800)); // optional gap
-                                }
-
-                                setState(() {
-                                  configMAc = true;
-                                });
-                              },
-                              child: Text("Pair", style: TextStyle(color: Colors.white54)),
-                            ),
-                            ElevatedButton(
-                              onPressed: () async {
-                                list.clear();
-                                setState(() {
-                                  configMAc = false;
-                                });
-                                for (int i = 0; i < 4; i++) {
-                                  final mac = await QRScannerWidget(context, "QR Code Battery ${i + 1}");
-                                  if (mac != null && mac.isNotEmpty) {
-                                    setState(() {
-                                      list.add(mac);
-                                    });
-                                  }
-
-                                  await Future.delayed(const Duration(milliseconds: 800)); // optional gap
-                                }
-                                setState(() {
-                                  configMAc = true;
-                                });
-                              },
-                              child: Text("Quad", style: TextStyle(color: Colors.white54)),
-                            ),
-                          ],
-                        ),
+                        // const SizedBox(height: 18),
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        //   children: [
+                        //     ElevatedButton(
+                        //       onPressed: () async {
+                        //         list.clear();
+                        //         setState(() {
+                        //           configMAc = false;
+                        //         });
+                        //
+                        //         for (int i = 0; i < 2; i++) {
+                        //           final mac = await QRScannerWidget(context, "QR Code Battery ${i + 1}");
+                        //           if (mac != null && mac.isNotEmpty) {
+                        //             setState(() {
+                        //               list.add(mac);
+                        //             });
+                        //           }
+                        //
+                        //           await Future.delayed(const Duration(milliseconds: 800)); // optional gap
+                        //         }
+                        //
+                        //         setState(() {
+                        //           configMAc = true;
+                        //         });
+                        //       },
+                        //       child: Text("Pair", style: TextStyle(color: Colors.white54)),
+                        //     ),
+                        //     ElevatedButton(
+                        //       onPressed: () async {
+                        //         list.clear();
+                        //         setState(() {
+                        //           configMAc = false;
+                        //         });
+                        //         for (int i = 0; i < 4; i++) {
+                        //           final mac = await QRScannerWidget(context, "QR Code Battery ${i + 1}");
+                        //           if (mac != null && mac.isNotEmpty) {
+                        //             setState(() {
+                        //               list.add(mac);
+                        //             });
+                        //           }
+                        //
+                        //           await Future.delayed(const Duration(milliseconds: 800)); // optional gap
+                        //         }
+                        //         setState(() {
+                        //           configMAc = true;
+                        //         });
+                        //       },
+                        //       child: Text("Quad", style: TextStyle(color: Colors.white54)),
+                        //     ),
+                        //   ],
+                        // ),
                         const SizedBox(height: 12),
                         ValueListenableBuilder<bool>(
                           valueListenable: macController.isBusy,
@@ -415,8 +506,12 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                                         ); // optional gap
 
                                         setState(() {
-                                          list[i] = mac;
-                                          configMAc = true;
+                                          if (list.contains(mac)) {
+                                            list[i] = "";
+                                          } else {
+                                            list[i] = mac;
+                                            configMAc = true;
+                                          }
                                         });
                                       }
                                     },
@@ -524,6 +619,7 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                 valueListenable: macController.batInfo,
                 builder: (_, batInfo, __) {
                   printFunc("BAT Info ${batInfo}");
+                  printFunc("BAT Info live  ${isLiveData}");
                   getSize(context);
                   return ValueListenableBuilder<bool>(
                     valueListenable: macController.isBusy,
@@ -539,11 +635,13 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                         );
                       } else {
                         if (batInfo.isEmpty) {
-                          return const Center(child: Text("No data"));
+                          if (isLiveData) return const Center(child: Text("No data"));
+                          return CircularProgressIndicator(strokeWidth: 2, color: Colors.cyanAccent);
                         }
                         return Container(
                           padding: EdgeInsets.only(bottom: 15),
-                          height: screenSize.height * 0.65,
+                          margin: EdgeInsets.only(bottom: 10),
+                          height: screenSize.height * 0.7,
                           width: screenSize.width * 0.9,
                           child: GridView.builder(
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

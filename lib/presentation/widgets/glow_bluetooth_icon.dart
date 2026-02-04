@@ -22,11 +22,11 @@ class _GlowBluetoothIconState extends State<GlowBluetoothIcon> with SingleTicker
   void initState() {
     super.initState();
     // _controller = AnimationController(vsync: this, duration: const Duration(seconds: 4))..repeat();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 2400))
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 3400))
       ..repeat(reverse: true);
     _scaleAnim = Tween<double>(
       begin: 1.0,
-      end: 1.08,
+      end: 1.3,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 

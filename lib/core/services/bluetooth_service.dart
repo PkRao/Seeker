@@ -59,12 +59,14 @@ class BluetoothService {
         )
         .listen(
           (device) {
+            if (!device.name.toLowerCase().startsWith('ble')) {
+              return;
+            }
             printFunc("Devcie : ${device.name}");
-            if (!device.name.toLowerCase().startsWith('ble')) return;
-
+            printFunc("UUIDs : ${device.serviceUuids}");
             _devices[device.id] = device;
             connectionStatus.putIfAbsent(device.id, () => false);
-            printFunc("device id : ${device.id} - state : ${connectionStatus[lastId]} ");
+            // printFunc("device id : ${device.id} - state : ${connectionStatus[lastId]} ");
             if (lastId == device.id && connectionStatus[lastId] == false) {
               autoConnect = true;
               stopScan();
@@ -155,17 +157,14 @@ class BluetoothService {
           },
           onError: (err) {
             printFunc("❌ Connection Error: $err");
-
             connectionStatus[deviceId] = false;
             connectionStatusNotifier.value = Map.from(connectionStatus); // ✅ ADD
-
             _emitDevices();
             if (!completer.isCompleted) completer.complete(false);
           },
         );
 
     _connectionSubs[deviceId] = sub;
-
     Future.delayed(const Duration(seconds: 15), () {
       if (!completer.isCompleted) {
         printFunc("❌ Timeout connecting to $deviceId");
@@ -188,9 +187,7 @@ class BluetoothService {
       printFunc("No previous device to restore");
       return;
     }
-
     printFunc("🔄 Restoring BLE connection to $lastId");
-
     try {
       // 🟡 Ensure device exists in device list even if scan doesn't emit
       _devices.putIfAbsent(
@@ -203,16 +200,12 @@ class BluetoothService {
           rssi: 0, serviceData: {},
         ),
       );
-
       _emitDevices();
-
       // Force disconnect ghost connection
       await disconnect(lastId);
       await Future.delayed(const Duration(milliseconds: 800));
-
       // Fresh reconnect
       final ok = await connect(lastId);
-
       if (ok) {
         printFunc("✅ Connection restored successfully");
       } else {
@@ -270,7 +263,6 @@ class BluetoothService {
       isConnected.value = false;
     }
     connectionStatusNotifier.value = Map.from(connectionStatus); // ✅ notify UI
-
     _emitDevices();
   }
 

@@ -241,6 +241,8 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
 
     // Listen to the service device stream and sort + push into the ValueNotifier
+    _bluetooth.cleanupStaleConnection();
+
     _devicesSub = _bluetooth.devicesStream.listen((list) {
       final sorted = List<DiscoveredDevice>.from(list);
 
@@ -326,6 +328,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     getSize(context);
     return SeekerBaseScaffold(
+      isDashboard: true,
       appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: Column(
         children: [
@@ -349,7 +352,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     const SizedBox(height: 10),
                     Text(
                       scanning ? "Scanning..." : "Tap to Scan",
-                      style: const TextStyle(color: Colors.white70),
+                      style: const TextStyle(color: Colors.white70, fontSize: 16),
                     ),
                   ],
                 ),
@@ -372,16 +375,29 @@ class _DashboardPageState extends State<DashboardPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        GlowBluetoothIcon(
-                          scanning: false,
-                          icon: Image.asset('assets/images/dreamFly2.jpg'),
-                          width: 200,
-                          height: 200,
-                        ),
-
-                        const Text(
-                          "No devices found\n\n\n\n\n\n\n",
-                          style: TextStyle(fontSize: 18, color: Colors.white54),
+                        ValueListenableBuilder<bool>(
+                          valueListenable: isScanning,
+                          builder:
+                              (context, scanning, _) => Column(
+                                children: [
+                                  !scanning
+                                      ? SizedBox(
+                                        child: Image.asset('assets/images/dreamFly2.jpg'),
+                                        width: 200,
+                                        height: 200,
+                                      )
+                                      : GlowBluetoothIcon(
+                                        scanning: scanning,
+                                        icon: Image.asset('assets/images/dreamFly2.jpg'),
+                                        width: 200,
+                                        height: 200,
+                                      ),
+                                  Text(
+                                    scanning ? "\n\n\n\n\n\n\n" : "No devices found\n\n\n\n\n\n\n",
+                                    style: TextStyle(fontSize: 14, color: Colors.white54),
+                                  ),
+                                ],
+                              ),
                         ),
                       ],
                     ),

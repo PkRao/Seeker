@@ -14,6 +14,7 @@ class SeekerBaseScaffold extends StatelessWidget {
   final bool applyPadding;
   final bool btCheck;
   final BluetoothService _bluetooth = BluetoothService();
+  final bool isDashboard; // 👈 ADD THIS
 
   SeekerBaseScaffold({
     super.key,
@@ -23,6 +24,7 @@ class SeekerBaseScaffold extends StatelessWidget {
     this.fab,
     this.applyPadding = true,
     this.btCheck = true,
+    this.isDashboard = false,
   });
 
   @override
@@ -32,10 +34,14 @@ class SeekerBaseScaffold extends StatelessWidget {
       onPopInvoked: (didPop) async {
         if (didPop) return;
 
-        final shouldExit = await showExitDialog(context);
-
+        bool shouldExit = true;
+        if (isDashboard) {
+          shouldExit = await showExitDialog(context) ?? false;
+        }
         if (shouldExit == true) {
-          await _bluetooth.cleanupStaleConnection();
+          if (isDashboard) {
+            await _bluetooth.cleanupStaleConnection();
+          }
           Navigator.of(context).pop(); // exit app
         }
       },
@@ -83,7 +89,7 @@ class SeekerBaseScaffold extends StatelessWidget {
 
                 // ===== VERSION TEXT (BOTTOM CENTER) =====
                 Positioned(
-                  bottom: 6,
+                  bottom: 0,
                   left: 0,
                   right: 0,
                   child: Center(

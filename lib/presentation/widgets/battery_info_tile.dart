@@ -105,9 +105,25 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
       children: [
         Row(
           children: [
-            const Text(
-              "Battery",
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+            Container(
+              margin: EdgeInsets.only(right: 5),
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: live ? Colors.greenAccent : Colors.redAccent,
+                boxShadow: [
+                  BoxShadow(
+                    color: (!live ? Colors.greenAccent : Colors.redAccent).withOpacity(0.8),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              "Battery - ${(widget.data["index"]).toString().toUpperCase()}",
+              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const Spacer(),
             InkWell(
@@ -139,19 +155,18 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
         ),
 
         const SizedBox(height: 6),
-        Text("ID: $bsn", style: const TextStyle(color: Colors.white70, fontSize: 13)),
 
         Text(
           "ID: $bsn",
-          maxLines: 1,
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
           softWrap: false,
           style: const TextStyle(color: Colors.white70, fontSize: 13),
         ),
 
         Text(
-          "Tracker: $mac",
-          maxLines: 1,
+          "MAC: $mac",
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
           softWrap: false,
           style: const TextStyle(color: Colors.white54, fontSize: 12),
@@ -212,8 +227,10 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
                       setState(() => isLinking = true); // ✅ show loader
 
                       await widget.macController.changeTrackr(
+                        context,
                         macId: mac,
                         index: widget.data["index"] ?? "b1",
+                        safePair: true,
                       );
 
                       // ⏳ keep loader for 10 seconds
