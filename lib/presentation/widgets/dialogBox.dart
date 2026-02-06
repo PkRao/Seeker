@@ -2,16 +2,17 @@ import 'dart:ui';
 
 import 'package:dfi_seekr/core/constants/app_colors.dart';
 import 'package:dfi_seekr/core/services/generalMethods.dart';
+import 'package:dfi_seekr/presentation/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 
 popUpDialog(
   BuildContext context,
-  String btn1,
-  String btn2, {
+  String rightBtn,
+  String leftBtn, {
   required String title,
   required String content,
-  required Function() onPressBtn1,
-  required Function() onPressBtn2,
+  required Function() onPressRightBtn,
+  required Function() onPressLeftBtn,
 }) {
   return showDialog<String>(
     barrierDismissible: false,
@@ -60,7 +61,9 @@ popUpDialog(
                 child: Column(
                   children: [
                     // 🔽 SCROLLABLE TEXT AREA
-                    Expanded(
+                    // Expanded(
+                    Flexible(
+                      fit: FlexFit.loose,
                       child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
                         child: Text(
@@ -83,19 +86,26 @@ popUpDialog(
 
                     // 🔽 FIXED BUTTONS
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          (btn2.isNotEmpty)
-                              ? ElevatedButton(
-                                onPressed: onPressBtn2,
-                                child: Text(btn2, style: TextStyle(color: Colors.white54)),
-                              )
+                          (leftBtn.isNotEmpty)
+                              ?     GlassButton(
+                            text: leftBtn,
+                            onPressed:onPressLeftBtn,
+                            borderColor: Colors.white24,
+                            textColor: Colors.white70,
+                          )
+
                               : SizedBox(),
-                          ElevatedButton(
-                            onPressed: onPressBtn1,
-                            child: Text(btn1, style: TextStyle(color: Colors.white54)),
+                          GlassButton(
+                            text: rightBtn,
+                            onPressed: onPressRightBtn,
+                            borderColor: Colors.cyanAccent.withOpacity(0.6),
+                            glowColor: Colors.cyanAccent,
+                            // borderColor: Colors.white24,
+                            textColor: Colors.cyanAccent,
                           ),
                         ],
                       ),
