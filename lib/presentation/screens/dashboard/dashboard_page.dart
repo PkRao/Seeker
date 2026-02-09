@@ -208,13 +208,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
 // dashboard.dart
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:dfi_seekr/core/services/generalMethods.dart';
 import 'package:dfi_seekr/core/services/hive_service.dart';
 import 'package:dfi_seekr/core/utils/logger.dart';
-import 'package:dfi_seekr/presentation/widgets/buttons.dart';
-import 'package:dfi_seekr/presentation/widgets/dialogBox.dart';
 import 'package:dfi_seekr/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
@@ -326,7 +323,6 @@ class _DashboardPageState extends State<DashboardPage> {
     });
     devicesNotifier.value = updated;
   }
-
 
   @override
   Widget build(BuildContext context) {

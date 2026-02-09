@@ -73,7 +73,7 @@ class MacProgrammingController {
         .listen(
           _handleNotify,
           onError: (e) {
-            errorText.value = "❌ Notify error ";//: $e";
+            errorText.value = "❌ Notify error "; //: $e";
           },
         );
   }
@@ -85,7 +85,7 @@ class MacProgrammingController {
         .listen(
           _handleNotifyDeviceInfo,
           onError: (e) {
-            errorText.value = "❌ Device Notify error";//: $e";
+            errorText.value = "❌ Device Notify error"; //: $e";
           },
         );
   }
@@ -165,41 +165,33 @@ class MacProgrammingController {
           _lastChangeErrorReason = "";
           _ackCompleter?.complete(json["status"] == "OK");
           // errorText.value = "👍 Battery Deleted";
-        }
-        else if (json["ack"] == "COUNT") {
-        if(json["status"] == "OK"){
-          deviceInfo.value = {};
-          batInfo.value = [];
-          await getSeekrInfo();
-          errorText.value = "👍 Battery Configured";
-
-        }else{
-          errorText.value = "❌ Battery configuration failed";//: $e";
-
-        }
+        } else if (json["ack"] == "COUNT") {
+          if (json["status"] == "OK") {
+            deviceInfo.value = {};
+            batInfo.value = [];
+            await getSeekrInfo();
+            errorText.value = "👍 Battery Configured";
+          } else {
+            errorText.value = "❌ Battery configuration failed"; //: $e";
+          }
         } else if (json["ack"] == "CLEAR_SEEKER_INFO") {
-        if(json["status"] == "OK"){
-          deviceInfo.value = {};
-          batInfo.value = [];
+          if (json["status"] == "OK") {
+            deviceInfo.value = {};
+            batInfo.value = [];
 
-          await getSeekrInfo();
-          errorText.value = "👍 Configuration Cleared";
-
-        }else{
-          errorText.value = "❌ Clear configuration failed";//: $e";
-
-        }
+            await getSeekrInfo();
+            errorText.value = "👍 Configuration Cleared";
+          } else {
+            errorText.value = "❌ Clear configuration failed"; //: $e";
+          }
         } else if (json["ack"] == "SSN") {
-        if(json["status"] == "OK"){
-          await getSeekrInfo();
-          errorText.value = "👍 Configured Serial Number";
-
-        }else{
-          errorText.value = "❌ SSN configuration failed";//: $e";
-
-        }
-        }
-        else if (json["ack"] == "CHANGE") {
+          if (json["status"] == "OK") {
+            await getSeekrInfo();
+            errorText.value = "👍 Configured Serial Number";
+          } else {
+            errorText.value = "❌ SSN configuration failed"; //: $e";
+          }
+        } else if (json["ack"] == "CHANGE") {
           if (json["status"] == "OK") {
             _ackCompleter?.complete(json["status"] == "OK");
 
@@ -356,7 +348,7 @@ class MacProgrammingController {
         errorText.value = "❌ Failed to Clear configuration";
       }
     } catch (e) {
-      errorText.value = "❌ Clear Config failed";//: $e";
+      errorText.value = "❌ Clear Config failed"; //: $e";
       printFunc("Exception clear all : ${errorText.value}");
       success = false;
     }
@@ -383,7 +375,7 @@ class MacProgrammingController {
         errorText.value = "❌ Failed to unlink battery (${index.toUpperCase()})";
       }
     } catch (e) {
-      errorText.value = "❌ Unlink failed";//: $e";
+      errorText.value = "❌ Unlink failed"; //: $e";
       printFunc("Unlink clear all : ${errorText.value}");
       success = false;
     }
@@ -534,8 +526,6 @@ class MacProgrammingController {
     });
   }
 
-
-
   void stopBatInfoPolling() {
     _batInfoTimer?.cancel();
     _batInfoTimer = null;
@@ -565,7 +555,6 @@ class MacProgrammingController {
     }
   }
 
-
   // ===============================
   //Get Seekr info
   // ===============================
@@ -577,14 +566,12 @@ class MacProgrammingController {
     try {
       await ble.writeCharacteristicWithResponse(_notifyDeviceInfo, value: utf8.encode("DEVICE_INFO\n"));
     } catch (e) {
-      errorText.value = "❌ Fetch Device detail failed";//: $e";
+      errorText.value = "❌ Fetch Device detail failed"; //: $e";
       printFunc("Exception Device detail failed : ${errorText.value}");
     }
 
     isBusy.value = false;
   }
-
-
 
   // ===============================
   // CLEAR Admin Config
@@ -592,55 +579,54 @@ class MacProgrammingController {
   Future<void> clearAdminConfig() async {
     isBusy.value = true;
     errorText.value = null;
-    String cmd=("CLEAR_SEEKER_INFO\n");
+    String cmd = ("CLEAR_SEEKER_INFO\n");
     printFunc(cmd);
 
     try {
       await ble.writeCharacteristicWithResponse(_notifyDeviceInfo, value: utf8.encode("$cmd"));
       await getSeekrInfo();
-
-    }  catch (e) {
-      errorText.value = "❌ Clear configuration failed";//: $e";
+    } catch (e) {
+      errorText.value = "❌ Clear configuration failed"; //: $e";
       printFunc("Exception clear all device : ${errorText.value}");
     }
 
     isBusy.value = false;
   }
+
   // ===============================
   // CLEAR Admin Config
   // ===============================
   Future<void> batteryAdminConfig(String batConfig) async {
     isBusy.value = true;
     errorText.value = null;
-    String cmd=("COUNT:$batConfig\n");
+    String cmd = ("COUNT:$batConfig\n");
     printFunc("Sending Cmd : $cmd");
 
     try {
       await ble.writeCharacteristicWithResponse(_notifyDeviceInfo, value: utf8.encode("$cmd"));
       // await getSeekrInfo();
-
-    }  catch (e) {
-      errorText.value = "❌ Battery configuration failed";//: $e";
+    } catch (e) {
+      errorText.value = "❌ Battery configuration failed"; //: $e";
       printFunc("Exception clear all device : ${errorText.value}");
     }
 
     isBusy.value = false;
   }
+
   // ===============================
   // CLEAR Admin Config
   // ===============================
   Future<void> setSeekrSerial(String serial) async {
     isBusy.value = true;
     errorText.value = null;
-    String cmd="SSN:$serial\n";
+    String cmd = "SSN:$serial\n";
     printFunc(cmd);
 
     try {
       await ble.writeCharacteristicWithResponse(_notifyDeviceInfo, value: utf8.encode("$cmd"));
       await getSeekrInfo();
-
     } catch (e) {
-      errorText.value = "❌ Config serial number failed";//: $e";
+      errorText.value = "❌ Config serial number failed"; //: $e";
       printFunc("Exception clear all device : ${errorText.value}");
     }
 

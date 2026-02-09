@@ -113,12 +113,14 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
       }
     }
   }
+
   Color batteryColor(double charge) {
     if (charge < 20) return Colors.redAccent;
     if (charge < 50) return Colors.orangeAccent;
     if (charge < 75) return Colors.yellowAccent.shade700;
     return Colors.greenAccent;
   }
+
   @override
   Widget build(BuildContext context) {
     return SeekerBaseScaffold(
@@ -156,8 +158,8 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                       await Future.delayed(const Duration(milliseconds: 1500));
                     }
                     if (macController.deviceInfo.value.isNotEmpty) {
-                   if(macController.deviceInfo.value["Batteries"] != null && int.parse((macController.deviceInfo.value["Batteries"]??0).toString())>0)
-                   {
+                      if (macController.deviceInfo.value["Batteries"] != null &&
+                          int.parse((macController.deviceInfo.value["Batteries"] ?? 0).toString()) > 0) {
                         // ⚙ Configure Batteries
                         popUpDialog(
                           context,
@@ -214,25 +216,23 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                             });
                           },
                         );
+                      } else {
+                        popUpDialog(
+                          context,
+                          "Ok",
+                          "",
+                          title: "Note",
+                          content: '''\nDevice is not configured\n Ask the admin to configure first\n''',
+                          onPressRightBtn: () async {
+                            printFunc("Ok");
+
+                            Future.delayed(Duration(milliseconds: 600), () {
+                              Navigator.of(context, rootNavigator: true).pop();
+                            });
+                          },
+                          onPressLeftBtn: () async {},
+                        );
                       }
-                   else{
-                     popUpDialog(
-                       context,
-                       "Ok",
-                       "",
-                       title: "Note",
-                       content: '''\nDevice is not configured\n Ask the admin to configure first\n''',
-                       onPressRightBtn: () async {
-                         printFunc("Ok");
-
-                         Future.delayed(Duration(milliseconds: 600), () {
-                           Navigator.of(context, rootNavigator: true).pop();
-                         });
-
-                       },
-                       onPressLeftBtn: () async {},
-                     );
-                   }
                     }
                   } else if (value == 2) {
                     // 🧹 Clear All Batteries
@@ -291,7 +291,7 @@ Please proceed carefully while scanning, as the scanning order is important.''',
         ],
       ),
       body: SingleChildScrollView(
-physics: const NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.all(5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,7 +353,7 @@ physics: const NeverScrollableScrollPhysics(),
                                 style: const TextStyle(fontSize: 18, color: Colors.white),
                               ),
                               Text(
-                                widget.bluetooth.connectedDevice?.id ??macController.deviceInfo.value["MAC"],
+                                widget.bluetooth.connectedDevice?.id ?? macController.deviceInfo.value["MAC"],
                                 style: const TextStyle(fontSize: 12, color: Colors.white70),
                               ),
                               // const SizedBox(height: 10),
@@ -380,8 +380,9 @@ physics: const NeverScrollableScrollPhysics(),
                 );
               },
             ),
-            Container(margin: EdgeInsets.only(left:20,right:20),
-              width:screenSize.width,
+            Container(
+              margin: EdgeInsets.only(left: 20, right: 20),
+              width: screenSize.width,
               child: Row(
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -398,24 +399,21 @@ physics: const NeverScrollableScrollPhysics(),
                             children: [
                               Row(
                                 children: [
-                                  Icon(
-                                    Icons.numbers,
-                                    color: AppColors.lightBg,
-                                  ),                                   const SizedBox(width: 10),
-                                  Text("-",
+                                  Icon(Icons.numbers, color: AppColors.lightBg),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    "-",
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                       color: AppColors.lightBg,
-                                    ),  ),
+                                    ),
+                                  ),
                                 ],
                               ),
                               Row(
                                 children: [
-                                  Icon(
-                                    Icons.charging_station_outlined,
-                                    color: Colors.amberAccent,
-                                  ),
+                                  Icon(Icons.charging_station_outlined, color: Colors.amberAccent),
                                   const SizedBox(width: 10),
 
                                   Text(
@@ -430,35 +428,29 @@ physics: const NeverScrollableScrollPhysics(),
                               ),
 
                               const SizedBox(width: 1),
-
                             ],
                           );
-                        }
-                        else
-                        {
+                        } else {
                           return Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Row(
                                 children: [
-                                  Icon(
-                                    Icons.numbers,
-                                    color: AppColors.lightBg,
-                                  ),                                   const SizedBox(width: 10),
-                                  Text("${deviceInfo["SerialNo"] ?? " ----"}",
+                                  Icon(Icons.numbers, color: AppColors.lightBg),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    "${deviceInfo["SerialNo"] ?? " ----"}",
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                       color: AppColors.lightBg,
-                                    ),  ),
+                                    ),
+                                  ),
                                 ],
                               ),
                               Row(
                                 children: [
-                                  Icon(
-                                    Icons.charging_station_outlined,
-                                    color: Colors.amberAccent,
-                                  ),
+                                  Icon(Icons.charging_station_outlined, color: Colors.amberAccent),
                                   const SizedBox(width: 10),
 
                                   Text(
@@ -473,7 +465,6 @@ physics: const NeverScrollableScrollPhysics(),
                               ),
 
                               const SizedBox(width: 1),
-
                             ],
                           );
                         }
@@ -481,51 +472,53 @@ physics: const NeverScrollableScrollPhysics(),
                     ),
                   ),
                   ValueListenableBuilder<List<Map?>>(
-                      valueListenable: macController.batInfo,
-                      builder: (_, batInfo, __) {
-                        printFunc("BAT Info ${batInfo}");
-                        printFunc("BAT Info live  ${isLiveData}");
-                        getSize(context);
-                        var avgVolt=0.0;
-                        var avgCharge=0.0;
-                        int noOfLiveBat=0;
-                        for (int i = 0; i < batInfo.length; i++) {
-                          if (batInfo[i] != null) {
-                            if ( batInfo[i]?["valid"]==true &&batInfo[i]?["voltage"] != null&& batInfo[i]?["voltage"]! > 0 ) {
-                              noOfLiveBat++;
-                              avgVolt+=num.parse((batInfo[i]!["voltage"]??0).toString());
-                              avgCharge+=num.parse((batInfo[i]!["%"]??0).toString());
-                            }
+                    valueListenable: macController.batInfo,
+                    builder: (_, batInfo, __) {
+                      printFunc("BAT Info ${batInfo}");
+                      printFunc("BAT Info live  ${isLiveData}");
+                      getSize(context);
+                      var avgVolt = 0.0;
+                      var avgCharge = 0.0;
+                      int noOfLiveBat = 0;
+                      for (int i = 0; i < batInfo.length; i++) {
+                        if (batInfo[i] != null) {
+                          if (batInfo[i]?["valid"] == true &&
+                              batInfo[i]?["voltage"] != null &&
+                              batInfo[i]?["voltage"]! > 0) {
+                            noOfLiveBat++;
+                            avgVolt += num.parse((batInfo[i]!["voltage"] ?? 0).toString());
+                            avgCharge += num.parse((batInfo[i]!["%"] ?? 0).toString());
                           }
                         }
+                      }
 
-                        avgVolt=(avgVolt/(noOfLiveBat))/100;
-                        avgCharge=(avgCharge/(noOfLiveBat));
-                        // avgVolt = batInfo.where((e) => (e["voltage"] ?? 0) > 0).map((e) => (e["voltage"] as num).toDouble()).reduce((a, b) => a + b) / batInfo.where((e) => (e["voltage"] ?? 0) > 0).length;
-                        //  avgVolt =batInfo.any((e) => num.tryParse(e["voltage"].toString()) != null && num.tryParse(e["voltage"].toString())! > 0)
-                        //      ? batInfo.map((e) => num.tryParse(e["voltage"].toString()) ?? 0).where((v) => v > 0).reduce((a, b) => a + b) /
-                        //      batInfo.map((e) => num.tryParse(e["voltage"].toString()) ?? 0).where((v) => v > 0).length
-                        //      : 0.0;
-                        //  avgVolt = batInfo.any((e) => (e?["voltage"] ?? 0) > 0) ? batInfo.where((e) => (e?["voltage"] ?? 0) > 0).map((e) => (e?["voltage"] as num).toDouble()).reduce((a, b) => a + b) / batInfo.where((e) => (e?["voltage"] ?? 0) > 0).length : 0.0;
+                      avgVolt = (avgVolt / (noOfLiveBat)) / 100;
+                      avgCharge = (avgCharge / (noOfLiveBat));
+                      // avgVolt = batInfo.where((e) => (e["voltage"] ?? 0) > 0).map((e) => (e["voltage"] as num).toDouble()).reduce((a, b) => a + b) / batInfo.where((e) => (e["voltage"] ?? 0) > 0).length;
+                      //  avgVolt =batInfo.any((e) => num.tryParse(e["voltage"].toString()) != null && num.tryParse(e["voltage"].toString())! > 0)
+                      //      ? batInfo.map((e) => num.tryParse(e["voltage"].toString()) ?? 0).where((v) => v > 0).reduce((a, b) => a + b) /
+                      //      batInfo.map((e) => num.tryParse(e["voltage"].toString()) ?? 0).where((v) => v > 0).length
+                      //      : 0.0;
+                      //  avgVolt = batInfo.any((e) => (e?["voltage"] ?? 0) > 0) ? batInfo.where((e) => (e?["voltage"] ?? 0) > 0).map((e) => (e?["voltage"] as num).toDouble()).reduce((a, b) => a + b) / batInfo.where((e) => (e?["voltage"] ?? 0) > 0).length : 0.0;
 
-                        return Row(
-                          children: [
-                            Icon(
-                              Icons.battery_alert_outlined,
-                              color: batteryColor(avgCharge),//AppColors.neonAccent,
+                      return Row(
+                        children: [
+                          Icon(
+                            Icons.battery_alert_outlined,
+                            color: batteryColor(avgCharge), //AppColors.neonAccent,
+                          ),
+                          Text(
+                            "${(avgVolt ?? 0.0).toStringAsFixed(2)}",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: batteryColor(avgCharge), // AppColors.neonAccent,
                             ),
-                            Text(
-                              "${(avgVolt??0.0).toStringAsFixed(2)}",
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color:batteryColor(avgCharge),// AppColors.neonAccent,
-                              ),
-                            ),
-                          ],
-                        );
-                      }),
-
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -704,36 +697,31 @@ physics: const NeverScrollableScrollPhysics(),
                                                 keyboardType: TextInputType.number,
                                                 maxLength: 5,
 
-                                                onChanged: (value){
+                                                onChanged: (value) {
                                                   setState(() {
-                                                    _canSerialSubmitting=false;
+                                                    _canSerialSubmitting = false;
                                                   });
-                                                  if(value.length==5){
-
-
-                                                      printFunc("SSN : $value");
-                                                      if (!value.isEmpty){
-
-                                                        // check numeric only
-                                                        final int? number = int.tryParse(value);
-                                                        if (number != null) {
-
-                                                          // check range (0 – 65535)
-                                                          if (number > 0 && number < 65535)
-                                                            setState(() {
-                                                              _canSerialSubmitting=true;
-                                                            });
-                                                        }}
+                                                  if (value.length == 5) {
+                                                    printFunc("SSN : $value");
+                                                    if (!value.isEmpty) {
+                                                      // check numeric only
+                                                      final int? number = int.tryParse(value);
+                                                      if (number != null) {
+                                                        // check range (0 – 65535)
+                                                        if (number > 0 && number < 65535)
+                                                          setState(() {
+                                                            _canSerialSubmitting = true;
+                                                          });
+                                                      }
+                                                    }
                                                   }
                                                 },
-                                                decoration:  InputDecoration(
-
+                                                decoration: InputDecoration(
                                                   hintText: "Serial Number",
                                                   maintainHintSize: true,
                                                   hintStyle: TextStyle(color: Colors.white38),
                                                   border: InputBorder.none,
                                                   counterText: "", // 👈 hides "0/4"
-
                                                 ),
                                               ),
                                             ),
@@ -742,74 +730,77 @@ physics: const NeverScrollableScrollPhysics(),
                                           const SizedBox(width: 12),
 
                                           // 🔹 Glass OK Button
-                                         if(_canSerialSubmitting) GestureDetector(
-                                            onTap:
-                                                _isSerialSubmitting
-                                                    ? null
-                                                    : () async {
-                                                      final serial = _serialController.text.trim();
-                                                      if (serial.isEmpty) return;
+                                          if (_canSerialSubmitting)
+                                            GestureDetector(
+                                              onTap:
+                                                  _isSerialSubmitting
+                                                      ? null
+                                                      : () async {
+                                                        final serial = _serialController.text.trim();
+                                                        if (serial.isEmpty) return;
 
-                                                      setState(() {
-                                                        _isSerialSubmitting = true;
-                                                      });
+                                                        setState(() {
+                                                          _isSerialSubmitting = true;
+                                                        });
 
-                                                      printFunc("Serial Entered: $serial");
-                                                      await macController.setSeekrSerial(serial);
+                                                        printFunc("Serial Entered: $serial");
+                                                        await macController.setSeekrSerial(serial);
 
-                                                      // 🔹 Simulate API / BLE call
-                                                      await Future.delayed(const Duration(seconds: 3));
+                                                        // 🔹 Simulate API / BLE call
+                                                        await Future.delayed(const Duration(seconds: 3));
 
-                                                      if (!mounted) return;
+                                                        if (!mounted) return;
 
-                                                      setState(() {
-                                                        _isSerialSubmitting = false;
-                                                        _canSerialSubmitting = false;
-                                                        _showSerialInput = false; // 👈 hide input
-                                                        _serialController.clear();
-                                                      });
-                                                    },
-                                            child: Container(
-                                              height: 42,
-                                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                                              decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(30),
-                                                border: Border.all(color: Colors.cyanAccent.withOpacity(0.6)),
-                                                gradient: LinearGradient(
-                                                  colors: [
-                                                    Colors.white.withOpacity(0.25),
-                                                    Colors.white.withOpacity(0.08),
+                                                        setState(() {
+                                                          _isSerialSubmitting = false;
+                                                          _canSerialSubmitting = false;
+                                                          _showSerialInput = false; // 👈 hide input
+                                                          _serialController.clear();
+                                                        });
+                                                      },
+                                              child: Container(
+                                                height: 42,
+                                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                                decoration: BoxDecoration(
+                                                  borderRadius: BorderRadius.circular(30),
+                                                  border: Border.all(
+                                                    color: Colors.cyanAccent.withOpacity(0.6),
+                                                  ),
+                                                  gradient: LinearGradient(
+                                                    colors: [
+                                                      Colors.white.withOpacity(0.25),
+                                                      Colors.white.withOpacity(0.08),
+                                                    ],
+                                                  ),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.cyanAccent.withOpacity(0.25),
+                                                      blurRadius: 14,
+                                                    ),
                                                   ],
                                                 ),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.cyanAccent.withOpacity(0.25),
-                                                    blurRadius: 14,
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Center(
-                                                child:
-                                                    _isSerialSubmitting
-                                                        ? const SizedBox(
-                                                          width: 18,
-                                                          height: 18,
-                                                          child: CircularProgressIndicator(
-                                                            strokeWidth: 2,
-                                                            color: Colors.cyanAccent,
+                                                child: Center(
+                                                  child:
+                                                      _isSerialSubmitting
+                                                          ? const SizedBox(
+                                                            width: 18,
+                                                            height: 18,
+                                                            child: CircularProgressIndicator(
+                                                              strokeWidth: 2,
+                                                              color: Colors.cyanAccent,
+                                                            ),
+                                                          )
+                                                          : const Text(
+                                                            "OK",
+                                                            style: TextStyle(
+                                                              color: Colors.cyanAccent,
+                                                              fontWeight: FontWeight.w600,
+                                                              letterSpacing: 0.6,
+                                                            ),
                                                           ),
-                                                        )
-                                                        : const Text(
-                                                          "OK",
-                                                          style: TextStyle(
-                                                            color: Colors.cyanAccent,
-                                                            fontWeight: FontWeight.w600,
-                                                            letterSpacing: 0.6,
-                                                          ),
-                                                        ),
+                                                ),
                                               ),
                                             ),
-                                          ),
                                         ],
                                       ),
                                     )
@@ -1115,7 +1106,6 @@ physics: const NeverScrollableScrollPhysics(),
                                 ),
                               ),
                             );
-
                           }
 
                           return Container(
@@ -1135,8 +1125,7 @@ physics: const NeverScrollableScrollPhysics(),
                                   int.tryParse(macController.deviceInfo.value["Batteries"].toString()) ??
                                   batInfo.length,
                               itemBuilder: (BuildContext context, int index) {
-                                return
-                                  BatteryInfoTile(
+                                return BatteryInfoTile(
                                   data: batInfo[index] ?? {},
                                   macController: macController,
                                 );

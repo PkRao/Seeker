@@ -43,10 +43,8 @@ class SeekerBaseScaffold extends StatelessWidget {
           if (isDashboard) {
             await _bluetooth.cleanupStaleConnection();
             SystemNavigator.pop(); // ✅ exits app properly
-
           }
           Navigator.of(context).pop(); // exit app
-
         }
       },
       child: Scaffold(

@@ -28,7 +28,6 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
     return Colors.greenAccent;
   }
 
-
   Color tempColor(double t) {
     if (t > 55) return Colors.redAccent;
     if (t > 45) return Colors.orangeAccent;
@@ -40,14 +39,14 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
   Widget build(BuildContext context) {
     /*
      {
- "index": "B1",
- "mac": "AA:BB:CC:DD:EE:FF",
- "voltage": 2392,
- "temperature": 2718,
- "percentage": 82,
- "BSN":"252011890",
- "valid":true
- }
+       "index": "B1",
+       "mac": "AA:BB:CC:DD:EE:FF",
+       "voltage": 2392,
+       "temperature": 2718,
+       "percentage": 82,
+       "BSN":"252011890",
+       "valid":true
+       }
 
     final voltage = widget.data["voltage"] ?? 0;
     final temperature = widget.data["temperature"] ?? 0;
@@ -81,12 +80,12 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
             boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 18, offset: Offset(0, 6))],
           ),
           // child: SingleChildScrollView(
-            // physics: const NeverScrollableScrollPhysics(),
-            // child:        FittedBox(fit:BoxFit.scaleDown,
-child:
+          // physics: const NeverScrollableScrollPhysics(),
+          // child:        FittedBox(fit:BoxFit.scaleDown,
+          child:
               isLinked
-                    ? _linkedUI(context, live, bsn, mac, charge * 1.0, voltage, temperature)
-                    : _notLinkedUI(context),
+                  ? _linkedUI(context, live, bsn, mac, charge * 1.0, voltage, temperature)
+                  : _notLinkedUI(context),
           // ),
           // ),
         ),
@@ -160,7 +159,8 @@ child:
 
         const SizedBox(height: 16),
 
-        FittedBox(fit:BoxFit.scaleDown,
+        FittedBox(
+          fit: BoxFit.scaleDown,
           child: Text(
             "ID: $bsn",
             maxLines: 1,
@@ -171,7 +171,8 @@ child:
         ),
         const SizedBox(height: 6),
 
-        FittedBox(fit:BoxFit.scaleDown,
+        FittedBox(
+          fit: BoxFit.scaleDown,
           child: Text(
             "MAC: $mac",
             maxLines: 2,
@@ -184,35 +185,38 @@ child:
         const SizedBox(height: 14),
         Container(height: 1, color: Colors.white38),
         const SizedBox(height: 12),
-Expanded(
-  child: Center(
-    child: SingleChildScrollView(child: Column(children: [
-      _valueTile(
-        icon: Icons.battery_charging_full,
-        label: "Charge",
-        value: "${charge.toStringAsFixed(2)} %",
-        glowColor: batteryColor(charge),
+        Expanded(
+          child: Center(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _valueTile(
+                    icon: Icons.battery_charging_full,
+                    label: "Charge",
+                    value: "${charge.toStringAsFixed(2)} %",
+                    glowColor: batteryColor(charge),
+                  ),
+                  const SizedBox(height: 10),
+
+                  _valueTile(
+                    icon: Icons.electric_bolt,
+                    label: "Voltage",
+                    value: "${(voltage / 100).toStringAsFixed(2)} V",
+                    glowColor: batteryColor(charge),
+                  ),
+                  const SizedBox(height: 10),
+
+                  _valueTile(
+                    icon: Icons.thermostat,
+                    label: "Temp",
+                    value: "${(temperature / 100).toStringAsFixed(2)}°C",
+                    glowColor: tempColor((temperature / 100).abs()),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        const SizedBox(height: 10),
-
-        _valueTile(
-        icon: Icons.electric_bolt,
-        label: "Voltage",
-        value: "${(voltage / 100).toStringAsFixed(2)} V",
-        glowColor: batteryColor(charge),
-        ),
-        const SizedBox(height: 10),
-
-        _valueTile(
-        icon: Icons.thermostat,
-        label: "Temp",
-        value: "${(temperature / 100).toStringAsFixed(2)}°C",
-        glowColor: tempColor((temperature / 100).abs()),
-        ),],),
-
-    ),
-  ),
-),
       ],
     );
   }
@@ -225,8 +229,15 @@ Expanded(
         const Icon(Icons.battery_unknown, color: Colors.white38, size: 36),
         const SizedBox(height: 10),
 
-        FittedBox(fit:BoxFit.scaleDown,
-            child: const Text("Link Battery", maxLines: 1, overflow: TextOverflow.clip, style: TextStyle( color: Colors.white54, fontSize: 10))),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: const Text(
+            "Link Battery",
+            maxLines: 1,
+            overflow: TextOverflow.clip,
+            style: TextStyle(color: Colors.white54, fontSize: 10),
+          ),
+        ),
 
         const SizedBox(height: 12),
 
@@ -266,10 +277,13 @@ Expanded(
                       setState(() => isLinking = false);
                     },
                     icon: const Icon(Icons.link, size: 18, color: Colors.cyanAccent),
-                    label: const Text("Link Battery",  maxLines: 1,style: TextStyle(
-    fontSize: 10,color: Colors.cyanAccent)),
+                    label: const Text(
+                      "Link Battery",
+                      maxLines: 1,
+                      style: TextStyle(fontSize: 10, color: Colors.cyanAccent),
+                    ),
 
-    style: OutlinedButton.styleFrom(
+                    style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.cyanAccent),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
@@ -290,13 +304,7 @@ Expanded(
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-      if(title)  Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white54,
-            fontSize: 12,
-          ),
-        ),
+        if (title) Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
         const SizedBox(height: 4),
         Row(
           children: [
@@ -319,27 +327,20 @@ Expanded(
             // const SizedBox(width: 8),
 
             // icon
-            Icon(
-              icon,
-              size: 18,
-              color: glowColor,
-            ),
+            Icon(icon, size: 18, color: glowColor),
             const SizedBox(width: 6),
 
             // value text
             Text(
               value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
         ),
       ],
     );
   }
+
   // Widget _valueTile(String label, String value, Color glowColor) {
   //   return Column(
   //     crossAxisAlignment: CrossAxisAlignment.start,
