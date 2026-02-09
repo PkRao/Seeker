@@ -393,7 +393,46 @@ physics: const NeverScrollableScrollPhysics(),
                         printFunc("BAT Info ${deviceInfo}");
                         getSize(context);
                         if (deviceInfo.isEmpty) {
-                          return const Center(child: Text("-"));
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.numbers,
+                                    color: AppColors.lightBg,
+                                  ),                                   const SizedBox(width: 10),
+                                  Text("-",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.lightBg,
+                                    ),  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.charging_station_outlined,
+                                    color: Colors.amberAccent,
+                                  ),
+                                  const SizedBox(width: 10),
+
+                                  Text(
+                                    "-",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.amber,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(width: 1),
+
+                            ],
+                          );
                         }
                         else
                         {
@@ -476,7 +515,7 @@ physics: const NeverScrollableScrollPhysics(),
                               color: batteryColor(avgCharge),//AppColors.neonAccent,
                             ),
                             Text(
-                              "${(avgVolt).toStringAsFixed(2)}",
+                              "${(avgVolt??0.0).toStringAsFixed(2)}",
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,

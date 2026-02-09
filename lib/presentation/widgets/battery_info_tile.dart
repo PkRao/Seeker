@@ -186,7 +186,8 @@ child:
         const SizedBox(height: 12),
 Expanded(
   child: Center(
-    child: SingleChildScrollView(child: Column(children: [_valueTile(
+    child: SingleChildScrollView(child: Column(children: [
+      _valueTile(
         icon: Icons.battery_charging_full,
         label: "Charge",
         value: "${charge.toStringAsFixed(2)} %",
@@ -265,8 +266,10 @@ Expanded(
                       setState(() => isLinking = false);
                     },
                     icon: const Icon(Icons.link, size: 18, color: Colors.cyanAccent),
-                    label: const Text("Link Battery", style: TextStyle(color: Colors.cyanAccent)),
-                    style: OutlinedButton.styleFrom(
+                    label: const Text("Link Battery",  maxLines: 1,style: TextStyle(
+    fontSize: 10,color: Colors.cyanAccent)),
+
+    style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.cyanAccent),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
