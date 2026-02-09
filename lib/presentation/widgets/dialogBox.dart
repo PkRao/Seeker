@@ -45,9 +45,9 @@ popUpDialog(
               child: Container(
                 width: screenSize.width * 0.7,
                 constraints: BoxConstraints(
-                  maxHeight: screenSize.height * 0.35, // 👈 responsive
+                  maxHeight: screenSize.height * 0.4, // 👈 responsive
                 ),
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   gradient: LinearGradient(
@@ -62,12 +62,17 @@ popUpDialog(
                   children: [
                     // 🔽 SCROLLABLE TEXT AREA
                     // Expanded(
-                    Flexible(
-                      fit: FlexFit.loose,
+                    const SizedBox(height: 16),
+
+                    // Divider
+                    Expanded(
+                      // child:
+                      // Flexible(
+                      //   fit: FlexFit.loose,
                       child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
                         child: Text(
-                          content,
+                          "$content \n",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white60.withOpacity(0.95),
@@ -76,28 +81,24 @@ popUpDialog(
                           ),
                         ),
                       ),
+                      // ),
                     ),
-
-                    const SizedBox(height: 16),
-
-                    // Divider
                     Container(height: 1, color: Colors.white.withOpacity(0.16)),
-                    const SizedBox(height: 16),
+                    // const SizedBox(height: 16),
 
                     // 🔽 FIXED BUTTONS
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           (leftBtn.isNotEmpty)
-                              ?     GlassButton(
-                            text: leftBtn,
-                            onPressed:onPressLeftBtn,
-                            borderColor: Colors.white24,
-                            textColor: Colors.white70,
-                          )
-
+                              ? GlassButton(
+                                text: leftBtn,
+                                onPressed: onPressLeftBtn,
+                                borderColor: Colors.white24,
+                                textColor: Colors.white70,
+                              )
                               : SizedBox(),
                           GlassButton(
                             text: rightBtn,

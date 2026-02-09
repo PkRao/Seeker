@@ -44,6 +44,7 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
   bool _showSerialInput = false;
   final TextEditingController _serialController = TextEditingController();
   bool _isSerialSubmitting = false;
+  bool _canSerialSubmitting = false;
 
   @override
   void dispose() {
@@ -112,7 +113,12 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
       }
     }
   }
-
+  Color batteryColor(double charge) {
+    if (charge < 20) return Colors.redAccent;
+    if (charge < 50) return Colors.orangeAccent;
+    if (charge < 75) return Colors.yellowAccent.shade700;
+    return Colors.greenAccent;
+  }
   @override
   Widget build(BuildContext context) {
     return SeekerBaseScaffold(
@@ -285,6 +291,7 @@ Please proceed carefully while scanning, as the scanning order is important.''',
         ],
       ),
       body: SingleChildScrollView(
+physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.all(5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,107 +349,12 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.bluetooth.connectedDevice?.name ?? "Unknown",
-                                style: const TextStyle(fontSize: 20, color: Colors.white),
+                                widget.bluetooth.connectedDevice?.name ?? "BLE_Seeker",
+                                style: const TextStyle(fontSize: 18, color: Colors.white),
                               ),
                               Text(
-                                widget.bluetooth.connectedDevice?.id ?? "-",
-                                style: const TextStyle(fontSize: 14, color: Colors.white70),
-                              ),
-                              Container(margin: EdgeInsets.only(top:10),
-                                width:screenSize.width*0.6,
-                                child: Row(
-                mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: ValueListenableBuilder<Map>(
-                                        valueListenable: macController.deviceInfo,
-                                        builder: (_, deviceInfo, __) {
-                                          printFunc("BAT Info ${deviceInfo}");
-                                          getSize(context);
-                                          if (deviceInfo.isEmpty) {
-                                            return const Center(child: Text("-"));
-                                          } else {
-                                            return Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.charging_station_outlined,
-                                                      color: Colors.amberAccent,
-                                                    ),
-                                                    Text(
-                                                      "${deviceInfo["Batteries"]}",
-                                                      style: TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight: FontWeight.w800,
-                                                        color: Colors.amber,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.numbers,
-                                                      color: AppColors.lightBg,
-                                                    ), Text("${deviceInfo["SerialNo"] ?? " ----"}"),
-                                                  ],
-                                                ),
-                                                const SizedBox(width: 1),
-
-                                              ],
-                                            );
-                                          }
-                                        },
-                                      ),
-                                    ),
-                                    ValueListenableBuilder<List<Map?>>(
-                                        valueListenable: macController.batInfo,
-                                        builder: (_, batInfo, __) {
-                                          printFunc("BAT Info ${batInfo}");
-                                          printFunc("BAT Info live  ${isLiveData}");
-                                          getSize(context);
-                                          var avgVolt=0.0;
-                                          int noOfLiveBat=0;
-                                          for (int i = 0; i < batInfo.length; i++) {
-                                            if (batInfo[i] != null) {
-                                              if ( batInfo[i]?["valid"]==true &&batInfo[i]?["voltage"] != null&& batInfo[i]?["voltage"]! > 0 ) {
-                                                noOfLiveBat++;
-                                                avgVolt+=num.parse((batInfo[i]!["voltage"]??0).toString());
-                                              }
-                                            }
-                                          }
-                                          avgVolt=avgVolt/noOfLiveBat;
-                                          // avgVolt = batInfo.where((e) => (e["voltage"] ?? 0) > 0).map((e) => (e["voltage"] as num).toDouble()).reduce((a, b) => a + b) / batInfo.where((e) => (e["voltage"] ?? 0) > 0).length;
-                                          //  avgVolt =batInfo.any((e) => num.tryParse(e["voltage"].toString()) != null && num.tryParse(e["voltage"].toString())! > 0)
-                                          //      ? batInfo.map((e) => num.tryParse(e["voltage"].toString()) ?? 0).where((v) => v > 0).reduce((a, b) => a + b) /
-                                          //      batInfo.map((e) => num.tryParse(e["voltage"].toString()) ?? 0).where((v) => v > 0).length
-                                          //      : 0.0;
-                                          //  avgVolt = batInfo.any((e) => (e?["voltage"] ?? 0) > 0) ? batInfo.where((e) => (e?["voltage"] ?? 0) > 0).map((e) => (e?["voltage"] as num).toDouble()).reduce((a, b) => a + b) / batInfo.where((e) => (e?["voltage"] ?? 0) > 0).length : 0.0;
-
-                                          return Row(
-                                            children: [
-                                              Icon(
-                                                Icons.battery_alert_outlined,
-                                                color: AppColors.neonAccent,
-                                              ),
-                                              Text(
-                                                "${(avgVolt/100).toStringAsFixed(2)}",
-                                                style: TextStyle(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: AppColors.neonAccent,
-                                                ),
-                                              ),
-                                            ],
-                                          );
-                                        }),
-
-                                  ],
-                                ),
+                                widget.bluetooth.connectedDevice?.id ??macController.deviceInfo.value["MAC"],
+                                style: const TextStyle(fontSize: 12, color: Colors.white70),
                               ),
                               // const SizedBox(height: 10),
                             ],
@@ -467,6 +379,116 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                   ),
                 );
               },
+            ),
+            Container(margin: EdgeInsets.only(left:20,right:20),
+              width:screenSize.width,
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: ValueListenableBuilder<Map>(
+                      valueListenable: macController.deviceInfo,
+                      builder: (_, deviceInfo, __) {
+                        printFunc("BAT Info ${deviceInfo}");
+                        getSize(context);
+                        if (deviceInfo.isEmpty) {
+                          return const Center(child: Text("-"));
+                        }
+                        else
+                        {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.numbers,
+                                    color: AppColors.lightBg,
+                                  ),                                   const SizedBox(width: 10),
+                                  Text("${deviceInfo["SerialNo"] ?? " ----"}",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.lightBg,
+                                    ),  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.charging_station_outlined,
+                                    color: Colors.amberAccent,
+                                  ),
+                                  const SizedBox(width: 10),
+
+                                  Text(
+                                    "${deviceInfo["Batteries"]}",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.amber,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(width: 1),
+
+                            ],
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                  ValueListenableBuilder<List<Map?>>(
+                      valueListenable: macController.batInfo,
+                      builder: (_, batInfo, __) {
+                        printFunc("BAT Info ${batInfo}");
+                        printFunc("BAT Info live  ${isLiveData}");
+                        getSize(context);
+                        var avgVolt=0.0;
+                        var avgCharge=0.0;
+                        int noOfLiveBat=0;
+                        for (int i = 0; i < batInfo.length; i++) {
+                          if (batInfo[i] != null) {
+                            if ( batInfo[i]?["valid"]==true &&batInfo[i]?["voltage"] != null&& batInfo[i]?["voltage"]! > 0 ) {
+                              noOfLiveBat++;
+                              avgVolt+=num.parse((batInfo[i]!["voltage"]??0).toString());
+                              avgCharge+=num.parse((batInfo[i]!["%"]??0).toString());
+                            }
+                          }
+                        }
+
+                        avgVolt=(avgVolt/(noOfLiveBat))/100;
+                        avgCharge=(avgCharge/(noOfLiveBat));
+                        // avgVolt = batInfo.where((e) => (e["voltage"] ?? 0) > 0).map((e) => (e["voltage"] as num).toDouble()).reduce((a, b) => a + b) / batInfo.where((e) => (e["voltage"] ?? 0) > 0).length;
+                        //  avgVolt =batInfo.any((e) => num.tryParse(e["voltage"].toString()) != null && num.tryParse(e["voltage"].toString())! > 0)
+                        //      ? batInfo.map((e) => num.tryParse(e["voltage"].toString()) ?? 0).where((v) => v > 0).reduce((a, b) => a + b) /
+                        //      batInfo.map((e) => num.tryParse(e["voltage"].toString()) ?? 0).where((v) => v > 0).length
+                        //      : 0.0;
+                        //  avgVolt = batInfo.any((e) => (e?["voltage"] ?? 0) > 0) ? batInfo.where((e) => (e?["voltage"] ?? 0) > 0).map((e) => (e?["voltage"] as num).toDouble()).reduce((a, b) => a + b) / batInfo.where((e) => (e?["voltage"] ?? 0) > 0).length : 0.0;
+
+                        return Row(
+                          children: [
+                            Icon(
+                              Icons.battery_alert_outlined,
+                              color: batteryColor(avgCharge),//AppColors.neonAccent,
+                            ),
+                            Text(
+                              "${(avgVolt).toStringAsFixed(2)}",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color:batteryColor(avgCharge),// AppColors.neonAccent,
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+
+                ],
+              ),
             ),
 
             const SizedBox(height: 28),
@@ -542,7 +564,7 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                               popUpDialog(
                                 context,
                                 "Quad",
-                                "Pair",
+                                "Duo",
                                 title: "Note",
                                 content: '''\nSelect Number of batteries to be configured''',
                                 onPressRightBtn: () async {
@@ -641,12 +663,38 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                                 controller: _serialController,
                                                 style: const TextStyle(color: Colors.white),
                                                 keyboardType: TextInputType.number,
-                                                maxLength: 4,
-                                                decoration: const InputDecoration(
+                                                maxLength: 5,
 
-                                                  hintText: "Enter Serial Number",
+                                                onChanged: (value){
+                                                  setState(() {
+                                                    _canSerialSubmitting=false;
+                                                  });
+                                                  if(value.length==5){
+
+
+                                                      printFunc("SSN : $value");
+                                                      if (!value.isEmpty){
+
+                                                        // check numeric only
+                                                        final int? number = int.tryParse(value);
+                                                        if (number != null) {
+
+                                                          // check range (0 – 65535)
+                                                          if (number > 0 && number < 65535)
+                                                            setState(() {
+                                                              _canSerialSubmitting=true;
+                                                            });
+                                                        }}
+                                                  }
+                                                },
+                                                decoration:  InputDecoration(
+
+                                                  hintText: "Serial Number",
+                                                  maintainHintSize: true,
                                                   hintStyle: TextStyle(color: Colors.white38),
                                                   border: InputBorder.none,
+                                                  counterText: "", // 👈 hides "0/4"
+
                                                 ),
                                               ),
                                             ),
@@ -655,7 +703,7 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                           const SizedBox(width: 12),
 
                                           // 🔹 Glass OK Button
-                                          GestureDetector(
+                                         if(_canSerialSubmitting) GestureDetector(
                                             onTap:
                                                 _isSerialSubmitting
                                                     ? null
@@ -677,6 +725,7 @@ Please proceed carefully while scanning, as the scanning order is important.''',
 
                                                       setState(() {
                                                         _isSerialSubmitting = false;
+                                                        _canSerialSubmitting = false;
                                                         _showSerialInput = false; // 👈 hide input
                                                         _serialController.clear();
                                                       });
@@ -751,7 +800,7 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                               children: const [
                                 Icon(Icons.delete_forever_outlined, color: Colors.redAccent, size: 18),
                                 SizedBox(width: 10),
-                                Text("Clear All Batteries", style: TextStyle(color: Colors.white)),
+                                Text("Clear All Configuration", style: TextStyle(color: Colors.white)),
                               ],
                             ),
                           ),
@@ -1028,25 +1077,27 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                               ),
                             );
 
-                            if (isLiveData) ;
                           }
+
                           return Container(
-                            padding: EdgeInsets.only(bottom: 15),
-                            margin: EdgeInsets.only(bottom: 10),
+                            padding: EdgeInsets.only(bottom: 10),
+                            margin: EdgeInsets.only(bottom: 15),
                             height: screenSize.height * 0.7,
                             width: screenSize.width * 0.9,
                             child: GridView.builder(
+                              // physics:const BouncingScrollPhysics(),
                               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
-                                childAspectRatio: 0.55, // 🔥 makes tile taller
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 10,
+                                childAspectRatio: 0.6, // 🔥 makes tile taller
+                                crossAxisSpacing: 30,
+                                mainAxisSpacing: 20,
                               ),
                               itemCount:
                                   int.tryParse(macController.deviceInfo.value["Batteries"].toString()) ??
                                   batInfo.length,
                               itemBuilder: (BuildContext context, int index) {
-                                return BatteryInfoTile(
+                                return
+                                  BatteryInfoTile(
                                   data: batInfo[index] ?? {},
                                   macController: macController,
                                 );

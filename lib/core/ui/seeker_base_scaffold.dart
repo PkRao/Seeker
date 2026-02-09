@@ -4,6 +4,7 @@ import 'package:dfi_seekr/core/services/bluetooth_service.dart';
 import 'package:dfi_seekr/presentation/screens/bluetooth/bt_off_screen.dart';
 import 'package:dfi_seekr/presentation/widgets/dialogBox.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' hide BluetoothService;
 
 class SeekerBaseScaffold extends StatelessWidget {
@@ -41,8 +42,11 @@ class SeekerBaseScaffold extends StatelessWidget {
         if (shouldExit == true) {
           if (isDashboard) {
             await _bluetooth.cleanupStaleConnection();
+            SystemNavigator.pop(); // ✅ exits app properly
+
           }
           Navigator.of(context).pop(); // exit app
+
         }
       },
       child: Scaffold(
