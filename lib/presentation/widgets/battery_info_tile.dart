@@ -61,6 +61,7 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
     final mac = widget.data["mac"] ?? "";
     final bsn = widget.data["BSN"] ?? "";
     final live = (widget.data["valid"] ?? true).toString() == "true";
+    final time = widget.data["time"] ?? DateTime.now();
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
@@ -84,7 +85,7 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
           // child:        FittedBox(fit:BoxFit.scaleDown,
           child:
               isLinked
-                  ? _linkedUI(context, live, bsn, mac, charge * 1.0, voltage, temperature)
+                  ? _linkedUI(context, live, bsn, mac, charge * 1.0, voltage, temperature, time)
                   : _notLinkedUI(context),
           // ),
           // ),
@@ -102,7 +103,17 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
     double charge,
     int voltage,
     int temperature,
+    DateTime time,
   ) {
+    final now = DateTime.now();
+    final lastUpdate = (now.difference(time)).inSeconds;
+    // final timeStamp="${now.hour.toString().padLeft(2, '0')}:"
+    //     "${now.minute.toString().padLeft(2, '0')}:"
+    //     "${now.second.toString().padLeft(2, '0')}";
+    printFunc(" condition last update $lastUpdate :${(lastUpdate > 30 && lastUpdate < 790)}");
+    printFunc(" condition last update  :${(lastUpdate < 790)}");
+    printFunc(" condition last update  :${(lastUpdate > 30)}");
+    printFunc("----------------");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -114,10 +125,17 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
               height: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: live ? Colors.greenAccent : Colors.redAccent,
+                color: ((live && lastUpdate <= 30)
+                        ? Colors.greenAccent
+                        : (lastUpdate > 30 && lastUpdate <= 60)
+                        ? Colors.yellowAccent.shade700
+                        : (lastUpdate > 60 && lastUpdate < 120)
+                        ? Colors.orangeAccent
+                        : Colors.redAccent)
+                    .withOpacity(0.8),
                 boxShadow: [
                   BoxShadow(
-                    color: (!live ? Colors.greenAccent : Colors.redAccent).withOpacity(0.8),
+                    color: (!(live) ? Colors.greenAccent : Colors.redAccent).withOpacity(0.8),
                     blurRadius: 8,
                     spreadRadius: 1,
                   ),
@@ -136,7 +154,6 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
                 });
                 printFunc("data : ${widget.data}");
 
-                bool Status = await widget.macController.deleteTrackr(widget.data["index"]);
                 await Future.delayed(Duration(seconds: widget.macController.interval - 3));
 
                 setState(() {
@@ -147,7 +164,7 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
                   isLinking
                       ? const Center(
                         child: SizedBox(
-                          width: 22,
+                          width: 22 ,
                           height: 22,
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.cyanAccent),
                         ),
@@ -190,6 +207,18 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
+                  /*   _valueTile(
+                    icon: Icons.battery_charging_full,
+                    label: "time",
+                    value: "${time.toString().split(" ")[1].split(".")[0]}",
+                    glowColor: batteryColor(charge),
+                  ),
+                  _valueTile(
+                    icon: Icons.battery_charging_full,
+                    label: "lastUpdate",
+                    value: "${lastUpdate}",
+                    glowColor: batteryColor(charge),
+                  ), */
                   _valueTile(
                     icon: Icons.battery_charging_full,
                     label: "Charge",
@@ -332,7 +361,7 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
 
             // value text
             Text(
-              value,
+              "${value}",
               style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],

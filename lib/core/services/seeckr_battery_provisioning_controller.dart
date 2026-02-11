@@ -25,6 +25,7 @@ class MacProgrammingController {
 
   // UI state
   final ValueNotifier<bool> isBusy = ValueNotifier(false);
+  final ValueNotifier<bool> isLiveData = ValueNotifier(false);
   final ValueNotifier<String> progressText = ValueNotifier("");
   final ValueNotifier<List<Map?>> batInfo = ValueNotifier([]);
   final ValueNotifier<Map<String, dynamic>> deviceInfo = ValueNotifier({});
@@ -108,42 +109,7 @@ class MacProgrammingController {
       // LIVE DATA JSON
       // -------------------------------
       if (json.containsKey("devices")) {
-        final devices = json["devices"] as List;
-
-        // Total batteries you expect
-        int totalBatteries = int.tryParse((deviceInfo.value["Batteries"] ?? "4").toString()) ?? 4;
-
-        // Create empty slots
-        final List<Map<String, dynamic>?> ordered = List.filled(totalBatteries, null);
-
-        for (final e in devices) {
-          final map = Map<String, dynamic>.from(e);
-          // final String indexStr = (map["index"] ?? "").toString().toLowerCase(); // b1
-          // final int? pos = int.tryParse(indexStr.replaceAll("b", ""));
-
-          final int? pos = int.tryParse(
-            (map["index"] ?? "").toString().toLowerCase().replaceAll(RegExp(r'[^0-9]'), ''),
-          );
-
-          if (pos == null || pos <= 0 || pos > totalBatteries) continue;
-
-          final now = DateTime.now();
-          map["time"] =
-              "${now.hour.toString().padLeft(2, '0')}:"
-              "${now.minute.toString().padLeft(2, '0')}:"
-              "${now.second.toString().padLeft(2, '0')}";
-
-          ordered[pos - 1] = map; // b1 → index 0
-        }
-
-        // Optional: Fill missing batteries with defaults
-        batInfo.value = List.generate(totalBatteries, (i) {
-          return ordered[i] ??
-              // {};
-              {"index": "B${i + 1}", "mac": "", "voltage": 0, "%": 0, "temp": 0, "BSN": "", "valid": false};
-        });
-
-        printFunc("✅ LIVE DATA PARSED \n(${batInfo.value} batteries)");
+        _handleLiveData(json);
         return;
       }
 
@@ -223,6 +189,66 @@ class MacProgrammingController {
       printFunc("❌ JSON PARSE ERROR: $e");
       // errorText.value = "❌ failed ";
     }
+  }
+
+  void _handleLiveData(Map json) {
+    /*
+json={
+  "devices": [
+    {
+      "index": "B1",
+      "mac": "AA:BB:CC:DD:EE:FF",
+      "voltage": 2392,
+      "temp": 2718,
+      "%": 82,
+      "BSN":"252011890",
+      "valid":true
+    }
+  ]
+};
+*/
+
+    final devices = json["devices"] as List;
+
+    // Total batteries you expect
+    int totalBatteries = int.tryParse((deviceInfo.value["Batteries"] ?? "4").toString()) ?? 4;
+
+    // Create empty slots
+    final List<Map<String, dynamic>?> ordered = List.filled(totalBatteries, null);
+    final now = DateTime.now();
+    // final  timeStamp="${now.hour.toString().padLeft(2, '0')}:"
+    //     "${now.minute.toString().padLeft(2, '0')}:"
+    //     "${now.second.toString().padLeft(2, '0')}";
+
+    for (final e in devices) {
+      final map = Map<String, dynamic>.from(e);
+      // final String indexStr = (map["index"] ?? "").toString().toLowerCase(); // b1
+      // final int? pos = int.tryParse(indexStr.replaceAll("b", ""));
+
+      final int? pos = int.tryParse(
+        (map["index"] ?? "").toString().toLowerCase().replaceAll(RegExp(r'[^0-9]'), ''),
+      );
+
+      if (pos == null || pos <= 0 || pos > totalBatteries) continue;
+
+      if (!isLiveData.value || map["valid"].toString() == "true") {
+        map["time"] = now;
+      } else {
+        map["time"] = batInfo.value[pos - 1]?["time"];
+      }
+      ordered[pos - 1] = map; // b1 → index 0
+    }
+
+    // Optional: Fill missing batteries with defaults
+    batInfo.value = List.generate(totalBatteries, (i) {
+      return ordered[i] ??
+          // {};
+          {"index": "B${i + 1}", "mac": "", "voltage": 0, "%": 0, "temp": 0, "BSN": "", "valid": false};
+    });
+
+    printFunc("✅ LIVE DATA PARSED \n(${batInfo.value} batteries)");
+    isLiveData.value = true;
+    return;
   }
 
   //

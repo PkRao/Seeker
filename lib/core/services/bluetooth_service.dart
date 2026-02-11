@@ -59,9 +59,14 @@ class BluetoothService {
         )
         .listen(
           (device) {
-            if (!device.name.toLowerCase().startsWith('ble')) {
+            if (!device.name.toLowerCase().startsWith('ble_')) {
               return;
             }
+            // if (!(device.serviceUuids as List).contains('f043176a-5168-11ee-be56-0242ac120021')) {
+            //   return;
+            //
+            // }
+            // printFunc("condition : ${(!(device.serviceUuids).contains(Uuid.parse('f043176a-5168-11ee-be56-0242ac120021')))}");
             printFunc("Devcie : ${device.name}");
             printFunc("UUIDs : ${device.serviceUuids}");
             _devices[device.id] = device;
@@ -80,7 +85,7 @@ class BluetoothService {
 
     Future.delayed(timeout, () {
       stopScan();
-      if (lastId != null && autoConnect) autoReconnect(lastId);
+      // if (lastId != null && autoConnect) autoReconnect(lastId);
     });
   }
 
