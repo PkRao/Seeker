@@ -6,7 +6,9 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class BluetoothMainScreen extends StatefulWidget {
   final Widget Function() onBluetoothOn;
+
   const BluetoothMainScreen({super.key, required this.onBluetoothOn});
+
   @override
   State<BluetoothMainScreen> createState() => _BluetoothMainScreenState();
 }
@@ -19,24 +21,21 @@ class _BluetoothMainScreenState extends State<BluetoothMainScreen> {
   @override
   void initState() {
     super.initState();
-    _adapterStateStateSubscription =
-        FlutterBluePlus.adapterState.listen((state) {
-          _adapterState = state;
-          if (mounted) {
-            setState(() {});
-          }
-        });
+    _adapterStateStateSubscription = FlutterBluePlus.adapterState.listen((state) {
+      _adapterState = state;
+      if (mounted) {
+        setState(() {});
+      }
+    });
   }
-
 
   @override
   Widget build(BuildContext context) {
-    Widget screen = _adapterState == BluetoothAdapterState.on
-    // ?  DfuHomePage(SelectedBatch: widget.SelectedBatch, allClients: widget.allClients)
-        ? widget.onBluetoothOn()
-        : BluetoothOffScreen(
-      adapterState: _adapterState,
-    );
+    Widget screen =
+        _adapterState == BluetoothAdapterState.on
+            // ?  DfuHomePage(SelectedBatch: widget.SelectedBatch, allClients: widget.allClients)
+            ? widget.onBluetoothOn()
+            : BluetoothOffScreen(adapterState: _adapterState);
 
     return screen;
   }
@@ -46,5 +45,4 @@ class _BluetoothMainScreenState extends State<BluetoothMainScreen> {
     _adapterStateStateSubscription.cancel();
     super.dispose();
   }
-
 }

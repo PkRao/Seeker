@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dfi_seekr/core/services/bluetooth_adapter_state.dart';
+import 'package:dfi_seekr/core/services/bluetooth_service.dart';
 import 'package:dfi_seekr/presentation/widgets/dif_logo.dart';
 import 'package:flutter/material.dart';
 
@@ -18,6 +19,7 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnim;
+  final BluetoothService _bluetooth = BluetoothService();
 
   @override
   void initState() {
@@ -30,7 +32,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       end: 1.08,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
     BluetoothStateManager.startListening();
-
+    _bluetooth.cleanupStaleConnection();
     Timer(const Duration(milliseconds: 6000), () {
       Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
     });
@@ -41,7 +43,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _controller.dispose();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -54,9 +55,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             Stack(
               alignment: Alignment.center,
               children: [
-                ring(160, 0.0, 0.4,_controller),
-                ring(220, 0.12, 0.3,_controller),
-                ring(300, 0.24, 0.2,_controller),
+                ring(160, 0.0, 0.4, _controller),
+                ring(220, 0.12, 0.3, _controller),
+                ring(300, 0.24, 0.2, _controller),
                 ScaleTransition(
                   scale: _scaleAnim,
                   child: Image.asset('assets/images/dreamFly2.jpg', width: 200, height: 200),

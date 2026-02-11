@@ -1,11 +1,10 @@
 import 'package:dfi_seekr/core/utils/logger.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class BluetoothStateManager {
   // Notifier that UI can listen to
-  static ValueNotifier<BluetoothAdapterState> btStateNotifier =
-  ValueNotifier(BluetoothAdapterState.off);
+  static ValueNotifier<BluetoothAdapterState> btStateNotifier = ValueNotifier(BluetoothAdapterState.off);
 
   static bool _isStarted = false;
 

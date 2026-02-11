@@ -50,28 +50,24 @@ class _AnimatedGradientButtonState extends State<AnimatedGradientButton> with Si
     );
   }
 }
+
 class RotatingRefreshButton extends StatefulWidget {
   final VoidCallback onPressed;
 
   const RotatingRefreshButton({required this.onPressed});
 
   @override
-  State<RotatingRefreshButton> createState() =>
-      _RotatingRefreshButtonState();
+  State<RotatingRefreshButton> createState() => _RotatingRefreshButtonState();
 }
 
-class _RotatingRefreshButtonState extends State<RotatingRefreshButton>
-    with SingleTickerProviderStateMixin {
+class _RotatingRefreshButtonState extends State<RotatingRefreshButton> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   bool _isAnimating = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    );
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 1));
   }
 
   @override
@@ -103,16 +99,9 @@ class _RotatingRefreshButtonState extends State<RotatingRefreshButton>
       onPressed: _handleTap,
       icon: AnimatedBuilder(
         animation: _controller,
-        child: const Icon(
-          Icons.refresh_outlined,
-          color: Colors.lightBlueAccent,
-          size: 30,
-        ),
+        child: const Icon(Icons.refresh_outlined, color: Colors.lightBlueAccent, size: 30),
         builder: (_, child) {
-          return Transform.rotate(
-            angle: _controller.value * 6.283185307,
-            child: child,
-          );
+          return Transform.rotate(angle: _controller.value * 6.283185307, child: child);
         },
       ),
     );
