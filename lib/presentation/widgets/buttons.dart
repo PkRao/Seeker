@@ -27,18 +27,32 @@ class GlassButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(30),
           border: Border.all(color: borderColor, width: 1),
           gradient: LinearGradient(
-            colors: [Colors.white.withOpacity(0.20), Colors.white.withOpacity(0.05)],
+            colors: [
+              Colors.white.withOpacity(0.20),
+              Colors.white.withOpacity(0.05),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           boxShadow:
               glowColor != null
-                  ? [BoxShadow(color: glowColor!.withOpacity(0.25), blurRadius: 16, spreadRadius: 1)]
+                  ? [
+                    BoxShadow(
+                      color: glowColor!.withOpacity(0.25),
+                      blurRadius: 16,
+                      spreadRadius: 1,
+                    ),
+                  ]
                   : [],
         ),
         child: Text(
           text,
-          style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.6),
+          style: TextStyle(
+            color: textColor,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.6,
+          ),
         ),
       ),
     );
@@ -71,7 +85,13 @@ class StandardButton extends StatelessWidget {
               Color(0xFF1DE9B6), // teal
             ],
           ),
-          boxShadow: [BoxShadow(color: Color(0x5500E5FF), blurRadius: 12, spreadRadius: 1)],
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x5500E5FF),
+              blurRadius: 12,
+              spreadRadius: 1,
+            ),
+          ],
         ),
         child: Center(
           child: Text(

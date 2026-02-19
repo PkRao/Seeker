@@ -8,13 +8,20 @@ class GlowBluetoothIcon extends StatefulWidget {
   final double height;
   final double width;
 
-  const GlowBluetoothIcon({super.key, this.scanning = false, this.icon, this.height = 80, this.width = 80});
+  const GlowBluetoothIcon({
+    super.key,
+    this.scanning = false,
+    this.icon,
+    this.height = 80,
+    this.width = 80,
+  });
 
   @override
   State<GlowBluetoothIcon> createState() => _GlowBluetoothIconState();
 }
 
-class _GlowBluetoothIconState extends State<GlowBluetoothIcon> with SingleTickerProviderStateMixin {
+class _GlowBluetoothIconState extends State<GlowBluetoothIcon>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnim;
 
@@ -22,8 +29,10 @@ class _GlowBluetoothIconState extends State<GlowBluetoothIcon> with SingleTicker
   void initState() {
     super.initState();
     // _controller = AnimationController(vsync: this, duration: const Duration(seconds: 4))..repeat();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 3400))
-      ..repeat(reverse: true);
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3400),
+    )..repeat(reverse: true);
     _scaleAnim = Tween<double>(
       begin: 1.0,
       end: 1.3,
@@ -42,14 +51,20 @@ class _GlowBluetoothIconState extends State<GlowBluetoothIcon> with SingleTicker
       builder: (context, child) {
         final t = (_controller.value + delay) % 1.0;
         final scale = 1.0 + t * 1.8;
-        return Opacity(opacity: (1.0 - t) * opacity, child: Transform.scale(scale: scale, child: child));
+        return Opacity(
+          opacity: (1.0 - t) * opacity,
+          child: Transform.scale(scale: scale, child: child),
+        );
       },
       child: Container(
         width: size,
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.neonBlue.withOpacity(0.6), width: 2),
+          border: Border.all(
+            color: AppColors.neonBlue.withOpacity(0.6),
+            width: 2,
+          ),
         ),
       ),
     );
@@ -68,7 +83,9 @@ class _GlowBluetoothIconState extends State<GlowBluetoothIcon> with SingleTicker
           if (widget.scanning) _ring(60, 0.24, 0.2),
           ScaleTransition(
             scale: _scaleAnim,
-            child: widget.icon ?? Icon(Icons.bluetooth, size: 35, color: AppColors.neonBlue),
+            child:
+                widget.icon ??
+                Icon(Icons.bluetooth, size: 35, color: AppColors.neonBlue),
           ),
         ],
       ),
@@ -78,7 +95,8 @@ class _GlowBluetoothIconState extends State<GlowBluetoothIcon> with SingleTicker
       animation: _controller,
       builder: (context, child) {
         final angle = _controller.value * 6.2831;
-        final glow = 0.55 + 0.45 * (0.5 + 0.5 * (1 - (_controller.value - 0.5).abs()));
+        final glow =
+            0.55 + 0.45 * (0.5 + 0.5 * (1 - (_controller.value - 0.5).abs()));
         return Transform.rotate(
           angle: widget.scanning ? angle : 0.0,
           child: Container(
@@ -91,7 +109,11 @@ class _GlowBluetoothIconState extends State<GlowBluetoothIcon> with SingleTicker
                   blurRadius: 40,
                   spreadRadius: 4,
                 ),
-                BoxShadow(color: AppColors.neonBlueSoft, blurRadius: 80, spreadRadius: 20),
+                BoxShadow(
+                  color: AppColors.neonBlueSoft,
+                  blurRadius: 80,
+                  spreadRadius: 20,
+                ),
               ],
             ),
             child: Icon(Icons.bluetooth, size: 55, color: AppColors.neonBlue),

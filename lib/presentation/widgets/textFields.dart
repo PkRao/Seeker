@@ -78,15 +78,24 @@ class TextFeildNewUser extends StatelessWidget {
             focusColor: Colors.black,
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),
-              borderSide: BorderSide(width: 1, color: etext == "" ? AppColors.darkBg : Colors.black),
+              borderSide: BorderSide(
+                width: 1,
+                color: etext == "" ? AppColors.darkBg : Colors.black,
+              ),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),
-              borderSide: BorderSide(width: 1, color: etext == "" ? Colors.black : Color(0xFFFF8A80)),
+              borderSide: BorderSide(
+                width: 1,
+                color: etext == "" ? Colors.black : Color(0xFFFF8A80),
+              ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),
-              borderSide: BorderSide(width: 1, color: etext == "" ? Colors.black : Color(0xFFFF8A80)),
+              borderSide: BorderSide(
+                width: 1,
+                color: etext == "" ? Colors.black : Color(0xFFFF8A80),
+              ),
             ),
             filled: true,
             fillColor: enable ? Colors.white : AppColors.lightBg,
@@ -149,7 +158,10 @@ class SearchTextFieldContainer extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 0, horizontal: 15),
       width: MediaQuery.of(context).size.width,
       height: 50,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(28.0), color: Colors.white),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28.0),
+        color: Colors.white,
+      ),
       child: child,
     );
   }

@@ -148,9 +148,15 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                     color: Colors.white10,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: AppColors.neonBlueSoft, width: 2),
-                    boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
+                    boxShadow: const [
+                      BoxShadow(color: Colors.black26, blurRadius: 6),
+                    ],
                   ),
-                  child: const Icon(Icons.more_vert, color: AppColors.neonAccent, size: 20),
+                  child: const Icon(
+                    Icons.more_vert,
+                    color: AppColors.neonAccent,
+                    size: 20,
+                  ),
                 ),
                 onSelected: (value) async {
                   if (value == 1) {
@@ -159,14 +165,20 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
                     }
                     if (macController.deviceInfo.value.isNotEmpty) {
                       if (macController.deviceInfo.value["Batteries"] != null &&
-                          int.parse((macController.deviceInfo.value["Batteries"] ?? 0).toString()) > 0) {
+                          int.parse(
+                                (macController.deviceInfo.value["Batteries"] ??
+                                        0)
+                                    .toString(),
+                              ) >
+                              0) {
                         // ⚙ Configure Batteries
                         popUpDialog(
                           context,
                           "Ok",
                           "",
                           title: "Warning",
-                          content: '''\nYou need to scan QR codes, one by one, in the correct sequence.
+                          content:
+                              '''\nYou need to scan QR codes, one by one, in the correct sequence.
 Please proceed carefully while scanning, as the scanning order is important.''',
                           onPressLeftBtn: () async {
                             printFunc("no pair"); //     () async {
@@ -180,15 +192,24 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                             setState(() {
                               assignBat = true;
                             });
-                            await Future.delayed(const Duration(milliseconds: 1200));
+                            await Future.delayed(
+                              const Duration(milliseconds: 1200),
+                            );
 
                             list.clear();
                             setState(() {
                               configMAc = false;
                             });
 
-                            for (int i = 0; i < macController.deviceInfo.value["Batteries"]; i++) {
-                              final mac = await QRScannerWidget(context, "QR Code Battery ${i + 1}");
+                            for (
+                              int i = 0;
+                              i < macController.deviceInfo.value["Batteries"];
+                              i++
+                            ) {
+                              final mac = await QRScannerWidget(
+                                context,
+                                "QR Code Battery ${i + 1}",
+                              );
                               printFunc("returned mac : $mac");
                               setState(() {
                                 if (!(list.contains(mac)))
@@ -203,11 +224,16 @@ Please proceed carefully while scanning, as the scanning order is important.''',
 
                               // }
                               printFunc("List : $list");
-                              await Future.delayed(const Duration(milliseconds: 800)); // optional gap
+                              await Future.delayed(
+                                const Duration(milliseconds: 800),
+                              ); // optional gap
                             }
                             setState(() {
                               if (list.length.toString() ==
-                                      (macController.deviceInfo.value["Batteries"].toString()) &&
+                                      (macController
+                                          .deviceInfo
+                                          .value["Batteries"]
+                                          .toString()) &&
                                   list.every((e) => e.isNotEmpty)) {
                                 configMAc = true;
                               } else if (list.isEmpty) {
@@ -222,7 +248,8 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                           "Ok",
                           "",
                           title: "Note",
-                          content: '''\nDevice is not configured\n Ask the admin to configure first\n''',
+                          content:
+                              '''\nDevice is not configured\n Ask the admin to configure first\n''',
                           onPressRightBtn: () async {
                             printFunc("Ok");
 
@@ -248,8 +275,10 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                     });
                   } else if (value == 3) {
                     // 🔌 Disconnect Device
-                    await widget.bluetooth.disconnect(widget.bluetooth.connectedDeviceId ?? "");
-                    if (mounted) Navigator.of(context).pop();
+                    await widget.bluetooth.disconnect(
+                      widget.bluetooth.connectedDeviceId ?? "",
+                    );
+                    // if (mounted) Navigator.of(context).pop();
                   }
                 },
                 itemBuilder:
@@ -258,9 +287,16 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                         value: 1,
                         child: Row(
                           children: const [
-                            Icon(Icons.settings_outlined, color: Colors.cyanAccent, size: 18),
+                            Icon(
+                              Icons.settings_outlined,
+                              color: Colors.cyanAccent,
+                              size: 18,
+                            ),
                             SizedBox(width: 10),
-                            Text("Configure Batteries", style: TextStyle(color: Colors.white)),
+                            Text(
+                              "Configure Batteries",
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ],
                         ),
                       ),
@@ -268,9 +304,16 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                         value: 2,
                         child: Row(
                           children: const [
-                            Icon(Icons.delete_forever_outlined, color: Colors.redAccent, size: 18),
+                            Icon(
+                              Icons.delete_forever_outlined,
+                              color: Colors.redAccent,
+                              size: 18,
+                            ),
                             SizedBox(width: 10),
-                            Text("Clear All Batteries", style: TextStyle(color: Colors.white)),
+                            Text(
+                              "Clear All Batteries",
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ],
                         ),
                       ),
@@ -278,9 +321,16 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                         value: 3,
                         child: Row(
                           children: const [
-                            Icon(Icons.bluetooth_disabled_outlined, color: Colors.orangeAccent, size: 18),
+                            Icon(
+                              Icons.bluetooth_disabled_outlined,
+                              color: Colors.orangeAccent,
+                              size: 18,
+                            ),
                             SizedBox(width: 10),
-                            Text("Disconnect", style: TextStyle(color: Colors.white)),
+                            Text(
+                              "Disconnect",
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ],
                         ),
                       ),
@@ -324,9 +374,12 @@ Please proceed carefully while scanning, as the scanning order is important.''',
 
                               // Reset timer on every tap
                               _adminTapResetTimer?.cancel();
-                              _adminTapResetTimer = Timer(const Duration(seconds: 1), () {
-                                _adminTapCount = 0; // taps must be continuous
-                              });
+                              _adminTapResetTimer = Timer(
+                                const Duration(seconds: 1),
+                                () {
+                                  _adminTapCount = 0; // taps must be continuous
+                                },
+                              );
 
                               if (_adminTapCount == 5) {
                                 print("You have entered 5 times");
@@ -349,12 +402,22 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.bluetooth.connectedDevice?.name ?? "BLE_Seeker",
-                                style: const TextStyle(fontSize: 18, color: Colors.white),
+                                widget.bluetooth.connectedDevice?.name ??
+                                    "BLE_Seeker",
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
                               ),
                               Text(
-                                widget.bluetooth.connectedDevice?.id ?? macController.deviceInfo.value["MAC"],
-                                style: const TextStyle(fontSize: 12, color: Colors.white70),
+                                (widget.bluetooth.connectedDevice?.id
+                                        .toString()) ??
+                                    macController.deviceInfo.value["MAC"]
+                                        .toString(),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white70,
+                                ),
                               ),
                               // const SizedBox(height: 10),
                             ],
@@ -366,7 +429,9 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                         height: 48,
                         child: RotatingRefreshButton(
                           onPressed: () async {
-                            printFunc("bussy status : ${macController.isBusy.value}");
+                            printFunc(
+                              "bussy status : ${macController.isBusy.value}",
+                            );
                             printFunc("isLoading status : ${isLoading}");
                             setState(() {});
                             macController.stopBatInfoPolling();
@@ -413,7 +478,10 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                               ),
                               Row(
                                 children: [
-                                  Icon(Icons.charging_station_outlined, color: Colors.amberAccent),
+                                  Icon(
+                                    Icons.charging_station_outlined,
+                                    color: Colors.amberAccent,
+                                  ),
                                   const SizedBox(width: 10),
 
                                   Text(
@@ -450,7 +518,10 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                               ),
                               Row(
                                 children: [
-                                  Icon(Icons.charging_station_outlined, color: Colors.amberAccent),
+                                  Icon(
+                                    Icons.charging_station_outlined,
+                                    color: Colors.amberAccent,
+                                  ),
                                   const SizedBox(width: 10),
 
                                   Text(
@@ -486,8 +557,12 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                               batInfo[i]?["voltage"] != null &&
                               batInfo[i]?["voltage"]! > 0) {
                             noOfLiveBat++;
-                            avgVolt += num.parse((batInfo[i]!["voltage"] ?? 0).toString());
-                            avgCharge += num.parse((batInfo[i]!["%"] ?? 0).toString());
+                            avgVolt += num.parse(
+                              (batInfo[i]!["voltage"] ?? 0).toString(),
+                            );
+                            avgCharge += num.parse(
+                              (batInfo[i]!["%"] ?? 0).toString(),
+                            );
                           }
                         }
                       }
@@ -505,14 +580,18 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                         children: [
                           Icon(
                             Icons.battery_alert_outlined,
-                            color: batteryColor(avgCharge), //AppColors.neonAccent,
+                            color: batteryColor(
+                              avgCharge,
+                            ), //AppColors.neonAccent,
                           ),
                           Text(
                             "${(avgVolt ?? 0.0).toStringAsFixed(2)}",
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: batteryColor(avgCharge), // AppColors.neonAccent,
+                              color: batteryColor(
+                                avgCharge,
+                              ), // AppColors.neonAccent,
                             ),
                           ),
                         ],
@@ -532,9 +611,13 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                     child: Container(
                       width: screenSize.width * 0.7,
                       constraints: BoxConstraints(
-                        maxHeight: screenSize.height * 0.35, // 👈 responsive
+                        maxHeight: screenSize.height * 0.4, // 👈 responsive
                       ),
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.only(
+                        left: 16,
+                        right: 16,
+                        top: 10,
+                      ),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         gradient: LinearGradient(
@@ -544,7 +627,11 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                         ),
                         border: Border.all(color: Colors.white12, width: 1.0),
                         boxShadow: [
-                          BoxShadow(color: Colors.black54, blurRadius: 18, offset: const Offset(0, 6)),
+                          BoxShadow(
+                            color: Colors.black54,
+                            blurRadius: 18,
+                            offset: const Offset(0, 6),
+                          ),
                         ],
                       ),
                       child: Column(
@@ -570,7 +657,11 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                         _serialController.clear();
                                       });
                                     },
-                                    icon: Icon(Icons.close_outlined, color: Colors.redAccent, size: 20),
+                                    icon: Icon(
+                                      Icons.close_outlined,
+                                      color: Colors.redAccent,
+                                      size: 20,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -589,7 +680,10 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                           const SizedBox(height: 16),
 
                           // Divider
-                          Container(height: 1, color: Colors.white.withOpacity(0.16)),
+                          Container(
+                            height: 1,
+                            color: Colors.white.withOpacity(0.16),
+                          ),
                           Expanded(child: const SizedBox(height: 0)),
                           InkWell(
                             onTap: () {
@@ -598,7 +692,8 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                 "Quad",
                                 "Duo",
                                 title: "Note",
-                                content: '''\nSelect Number of batteries to be configured''',
+                                content:
+                                    '''\nSelect Number of batteries to be configured''',
                                 onPressRightBtn: () async {
                                   printFunc("Quad"); //
                                   popUpDialog(
@@ -606,18 +701,33 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                     "Ok",
                                     "",
                                     title: "Note",
-                                    content: '''\nBattery configuration will be set to 4\n''',
+                                    content:
+                                        '''\nBattery configuration will be set to 4\n''',
                                     onPressRightBtn: () async {
-                                      await macController.batteryAdminConfig("QUAD");
+                                      await macController.batteryAdminConfig(
+                                        "QUAD",
+                                      );
                                       printFunc("Ok");
 
-                                      Future.delayed(Duration(milliseconds: 600), () {
-                                        Navigator.of(context, rootNavigator: true).pop();
-                                      });
-                                      Future.delayed(Duration(milliseconds: 600), () {
-                                        Navigator.of(context, rootNavigator: true).pop();
-                                        setState(() {});
-                                      });
+                                      Future.delayed(
+                                        Duration(milliseconds: 600),
+                                        () {
+                                          Navigator.of(
+                                            context,
+                                            rootNavigator: true,
+                                          ).pop();
+                                        },
+                                      );
+                                      Future.delayed(
+                                        Duration(milliseconds: 600),
+                                        () {
+                                          Navigator.of(
+                                            context,
+                                            rootNavigator: true,
+                                          ).pop();
+                                          setState(() {});
+                                        },
+                                      );
                                     },
                                     onPressLeftBtn: () async {},
                                   );
@@ -628,17 +738,32 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                     "Ok",
                                     "",
                                     title: "Note",
-                                    content: '''\nBattery configuration will be set to 2\n''',
+                                    content:
+                                        '''\nBattery configuration will be set to 2\n''',
                                     onPressRightBtn: () async {
-                                      await macController.batteryAdminConfig("PAIR");
+                                      await macController.batteryAdminConfig(
+                                        "PAIR",
+                                      );
                                       printFunc("Ok");
-                                      Future.delayed(Duration(milliseconds: 600), () {
-                                        Navigator.of(context, rootNavigator: true).pop();
-                                      });
-                                      Future.delayed(Duration(milliseconds: 600), () {
-                                        Navigator.of(context, rootNavigator: true).pop();
-                                        setState(() {});
-                                      });
+                                      Future.delayed(
+                                        Duration(milliseconds: 600),
+                                        () {
+                                          Navigator.of(
+                                            context,
+                                            rootNavigator: true,
+                                          ).pop();
+                                        },
+                                      );
+                                      Future.delayed(
+                                        Duration(milliseconds: 600),
+                                        () {
+                                          Navigator.of(
+                                            context,
+                                            rootNavigator: true,
+                                          ).pop();
+                                          setState(() {});
+                                        },
+                                      );
                                     },
                                     onPressLeftBtn: () async {},
                                   );
@@ -647,9 +772,16 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                             },
                             child: Row(
                               children: const [
-                                Icon(Icons.settings_outlined, color: Colors.cyanAccent, size: 18),
+                                Icon(
+                                  Icons.settings_outlined,
+                                  color: Colors.cyanAccent,
+                                  size: 18,
+                                ),
                                 SizedBox(width: 10),
-                                Text("Configure Batteries", style: TextStyle(color: Colors.white)),
+                                Text(
+                                  "Configure Batteries",
+                                  style: TextStyle(color: Colors.white),
+                                ),
                               ],
                             ),
                           ),
@@ -662,9 +794,16 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                             },
                             child: Row(
                               children: const [
-                                Icon(Icons.confirmation_number, color: Colors.orangeAccent, size: 18),
+                                Icon(
+                                  Icons.confirmation_number,
+                                  color: Colors.orangeAccent,
+                                  size: 18,
+                                ),
                                 SizedBox(width: 10),
-                                Text("Seekr Serial Number", style: TextStyle(color: Colors.white)),
+                                Text(
+                                  "Seekr Serial Number",
+                                  style: TextStyle(color: Colors.white),
+                                ),
                               ],
                             ),
                           ),
@@ -683,34 +822,50 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                           Expanded(
                                             child: Container(
                                               height: 42,
-                                              padding: const EdgeInsets.symmetric(horizontal: 14),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 14,
+                                                  ),
                                               decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(20),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
                                                 gradient: LinearGradient(
-                                                  colors: [Colors.white30, Colors.white10],
+                                                  colors: [
+                                                    Colors.white30,
+                                                    Colors.white10,
+                                                  ],
                                                 ),
-                                                border: Border.all(color: Colors.white24),
+                                                border: Border.all(
+                                                  color: Colors.white24,
+                                                ),
                                               ),
                                               child: TextField(
                                                 controller: _serialController,
-                                                style: const TextStyle(color: Colors.white),
-                                                keyboardType: TextInputType.number,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                                keyboardType:
+                                                    TextInputType.number,
                                                 maxLength: 5,
 
                                                 onChanged: (value) {
                                                   setState(() {
-                                                    _canSerialSubmitting = false;
+                                                    _canSerialSubmitting =
+                                                        false;
                                                   });
                                                   if (value.length == 5) {
                                                     printFunc("SSN : $value");
                                                     if (!value.isEmpty) {
                                                       // check numeric only
-                                                      final int? number = int.tryParse(value);
+                                                      final int? number =
+                                                          int.tryParse(value);
                                                       if (number != null) {
                                                         // check range (0 – 65535)
-                                                        if (number > 0 && number < 65535)
+                                                        if (number > 0 &&
+                                                            number < 65535)
                                                           setState(() {
-                                                            _canSerialSubmitting = true;
+                                                            _canSerialSubmitting =
+                                                                true;
                                                           });
                                                       }
                                                     }
@@ -719,9 +874,12 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                                 decoration: InputDecoration(
                                                   hintText: "Serial Number",
                                                   maintainHintSize: true,
-                                                  hintStyle: TextStyle(color: Colors.white38),
+                                                  hintStyle: TextStyle(
+                                                    color: Colors.white38,
+                                                  ),
                                                   border: InputBorder.none,
-                                                  counterText: "", // 👈 hides "0/4"
+                                                  counterText:
+                                                      "", // 👈 hides "0/4"
                                                 ),
                                               ),
                                             ),
@@ -736,45 +894,73 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                                   _isSerialSubmitting
                                                       ? null
                                                       : () async {
-                                                        final serial = _serialController.text.trim();
-                                                        if (serial.isEmpty) return;
+                                                        final serial =
+                                                            _serialController
+                                                                .text
+                                                                .trim();
+                                                        if (serial.isEmpty)
+                                                          return;
 
                                                         setState(() {
-                                                          _isSerialSubmitting = true;
+                                                          _isSerialSubmitting =
+                                                              true;
                                                         });
 
-                                                        printFunc("Serial Entered: $serial");
-                                                        await macController.setSeekrSerial(serial);
+                                                        printFunc(
+                                                          "Serial Entered: $serial",
+                                                        );
+                                                        await macController
+                                                            .setSeekrSerial(
+                                                              serial,
+                                                            );
 
                                                         // 🔹 Simulate API / BLE call
-                                                        await Future.delayed(const Duration(seconds: 3));
+                                                        await Future.delayed(
+                                                          const Duration(
+                                                            seconds: 3,
+                                                          ),
+                                                        );
 
                                                         if (!mounted) return;
 
                                                         setState(() {
-                                                          _isSerialSubmitting = false;
-                                                          _canSerialSubmitting = false;
-                                                          _showSerialInput = false; // 👈 hide input
-                                                          _serialController.clear();
+                                                          _isSerialSubmitting =
+                                                              false;
+                                                          _canSerialSubmitting =
+                                                              false;
+                                                          _showSerialInput =
+                                                              false; // 👈 hide input
+                                                          _serialController
+                                                              .clear();
                                                         });
                                                       },
                                               child: Container(
                                                 height: 42,
-                                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 20,
+                                                    ),
                                                 decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.circular(30),
+                                                  borderRadius:
+                                                      BorderRadius.circular(30),
                                                   border: Border.all(
-                                                    color: Colors.cyanAccent.withOpacity(0.6),
+                                                    color: Colors.cyanAccent
+                                                        .withOpacity(0.6),
                                                   ),
                                                   gradient: LinearGradient(
                                                     colors: [
-                                                      Colors.white.withOpacity(0.25),
-                                                      Colors.white.withOpacity(0.08),
+                                                      Colors.white.withOpacity(
+                                                        0.25,
+                                                      ),
+                                                      Colors.white.withOpacity(
+                                                        0.08,
+                                                      ),
                                                     ],
                                                   ),
                                                   boxShadow: [
                                                     BoxShadow(
-                                                      color: Colors.cyanAccent.withOpacity(0.25),
+                                                      color: Colors.cyanAccent
+                                                          .withOpacity(0.25),
                                                       blurRadius: 14,
                                                     ),
                                                   ],
@@ -787,15 +973,22 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                                             height: 18,
                                                             child: CircularProgressIndicator(
                                                               strokeWidth: 2,
-                                                              color: Colors.cyanAccent,
+                                                              color:
+                                                                  Colors
+                                                                      .cyanAccent,
                                                             ),
                                                           )
                                                           : const Text(
                                                             "OK",
                                                             style: TextStyle(
-                                                              color: Colors.cyanAccent,
-                                                              fontWeight: FontWeight.w600,
-                                                              letterSpacing: 0.6,
+                                                              color:
+                                                                  Colors
+                                                                      .cyanAccent,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              letterSpacing:
+                                                                  0.6,
                                                             ),
                                                           ),
                                                 ),
@@ -814,23 +1007,37 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                 "Ok",
                                 "",
                                 title: "Note",
-                                content: '''\nAre you sure you want to clear all configuration ?\n''',
+                                content:
+                                    '''\nAre you sure you want to clear all configuration ?\n''',
                                 onPressRightBtn: () async {
                                   await macController.clearAdminConfig();
                                   printFunc("Ok");
-                                  Future.delayed(Duration(milliseconds: 600), () {
-                                    Navigator.of(context, rootNavigator: true).pop();
-                                    setState(() {});
-                                  });
+                                  Future.delayed(
+                                    Duration(milliseconds: 600),
+                                    () {
+                                      Navigator.of(
+                                        context,
+                                        rootNavigator: true,
+                                      ).pop();
+                                      setState(() {});
+                                    },
+                                  );
                                 },
                                 onPressLeftBtn: () {},
                               );
                             },
                             child: Row(
                               children: const [
-                                Icon(Icons.delete_forever_outlined, color: Colors.redAccent, size: 18),
+                                Icon(
+                                  Icons.delete_forever_outlined,
+                                  color: Colors.redAccent,
+                                  size: 18,
+                                ),
                                 SizedBox(width: 10),
-                                Text("Clear All Configuration", style: TextStyle(color: Colors.white)),
+                                Text(
+                                  "Clear All Configuration",
+                                  style: TextStyle(color: Colors.white),
+                                ),
                               ],
                             ),
                           ),
@@ -858,7 +1065,11 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                         ),
                         border: Border.all(color: Colors.white12, width: 1.0),
                         boxShadow: [
-                          BoxShadow(color: Colors.black54, blurRadius: 18, offset: const Offset(0, 6)),
+                          BoxShadow(
+                            color: Colors.black54,
+                            blurRadius: 18,
+                            offset: const Offset(0, 6),
+                          ),
                         ],
                       ),
                       child: Column(
@@ -870,7 +1081,8 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                               Text(
                                 "Battery Combination",
                                 style: TextStyle(
-                                  color: Colors.white60.withOpacity(0.95), //AppColors.neonAccent,
+                                  color: Colors.white60.withOpacity(0.95),
+                                  //AppColors.neonAccent,
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -883,7 +1095,10 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                     configMAc = false;
                                   });
                                 },
-                                icon: Icon(Icons.close, color: AppColors.errorText),
+                                icon: Icon(
+                                  Icons.close,
+                                  color: AppColors.errorText,
+                                ),
                               ),
                             ],
                           ),
@@ -891,7 +1106,10 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                           const SizedBox(height: 18),
 
                           // Divider line
-                          Container(height: 1, color: Colors.white.withOpacity(0.16)),
+                          Container(
+                            height: 1,
+                            color: Colors.white.withOpacity(0.16),
+                          ),
                           // const SizedBox(height: 18),
                           // Row(
                           //   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -952,7 +1170,10 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                               return ValueListenableBuilder<String>(
                                 valueListenable: macController.progressText,
                                 builder: (_, text, __) {
-                                  return Text(text, style: const TextStyle(color: Colors.white));
+                                  return Text(
+                                    text,
+                                    style: const TextStyle(color: Colors.white),
+                                  );
                                 },
                               );
                             },
@@ -960,12 +1181,16 @@ Please proceed carefully while scanning, as the scanning order is important.''',
 
                           const SizedBox(height: 12),
                           ListView.builder(
-                            shrinkWrap: true, // 👈 allows height to grow
-                            physics: const NeverScrollableScrollPhysics(), // 👈 disables inner scrolling
+                            shrinkWrap: true,
+                            // 👈 allows height to grow
+                            physics: const NeverScrollableScrollPhysics(),
+                            // 👈 disables inner scrolling
                             itemCount: list.length,
                             itemBuilder: (context, i) {
                               return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
                                 child: Row(
                                   children: [
                                     IconButton(
@@ -996,11 +1221,17 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                           });
                                         }
                                       },
-                                      icon: Icon(Icons.edit, color: AppColors.neonBlue),
+                                      icon: Icon(
+                                        Icons.edit,
+                                        color: AppColors.neonBlue,
+                                      ),
                                     ),
                                     Text(
                                       "B${i + 1} - ${list[i]}",
-                                      style: const TextStyle(fontSize: 16, color: Colors.white70),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white70,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -1018,7 +1249,9 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                     list.length >= 2
                                         ? () async {
                                           // 👉 Proceed action
-                                          printFunc("Proceed clicked with MACs: $list");
+                                          printFunc(
+                                            "Proceed clicked with MACs: $list",
+                                          );
                                           // list[0]="C2:9B:27:7F:50:00";
                                           // list[1]="DD:18:AD:D4:BD:04";
                                           // list.add("C2:9B:27:7F:50:09");
@@ -1029,7 +1262,9 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                             assignBat = false;
                                           });
                                           // call API / navigate / start BLE config here
-                                          await macController.programMacs(macList: list);
+                                          await macController.programMacs(
+                                            macList: list,
+                                          );
                                           await macController.getSeekrInfo();
 
                                           setState(() {
@@ -1083,7 +1318,10 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                             child: SizedBox(
                               width: 22,
                               height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.cyanAccent),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.cyanAccent,
+                              ),
                             ),
                           );
                         } else {
@@ -1095,13 +1333,18 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                                 child: Column(
                                   children: [
                                     SizedBox(
-                                      child: Image.asset('assets/images/dreamFly2.jpg'),
+                                      child: Image.asset(
+                                        'assets/images/dreamFly2.jpg',
+                                      ),
                                       width: 200,
                                       height: 200,
                                     ),
                                     isLiveData
                                         ? const Center(child: Text("No data"))
-                                        : CircularProgressIndicator(strokeWidth: 2, color: Colors.cyanAccent),
+                                        : CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.cyanAccent,
+                                        ),
                                   ],
                                 ),
                               ),
@@ -1111,18 +1354,23 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                           return Container(
                             padding: EdgeInsets.only(bottom: 10),
                             margin: EdgeInsets.only(bottom: 15),
-                            height: screenSize.height * 0.7,
+                            height: screenSize.height * 0.65,
                             width: screenSize.width * 0.9,
                             child: GridView.builder(
                               // physics:const BouncingScrollPhysics(),
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                childAspectRatio: 0.6, // 🔥 makes tile taller
-                                crossAxisSpacing: 30,
-                                mainAxisSpacing: 20,
-                              ),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    childAspectRatio:
+                                        0.6, // 🔥 makes tile taller
+                                    crossAxisSpacing: 30,
+                                    mainAxisSpacing: 20,
+                                  ),
                               itemCount:
-                                  int.tryParse(macController.deviceInfo.value["Batteries"].toString()) ??
+                                  int.tryParse(
+                                    macController.deviceInfo.value["Batteries"]
+                                        .toString(),
+                                  ) ??
                                   batInfo.length,
                               itemBuilder: (BuildContext context, int index) {
                                 return BatteryInfoTile(

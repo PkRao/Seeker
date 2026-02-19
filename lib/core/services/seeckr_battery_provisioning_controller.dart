@@ -211,10 +211,14 @@ json={
     final devices = json["devices"] as List;
 
     // Total batteries you expect
-    int totalBatteries = int.tryParse((deviceInfo.value["Batteries"] ?? "4").toString()) ?? 4;
+    int totalBatteries =
+        int.tryParse((deviceInfo.value["Batteries"] ?? "4").toString()) ?? 4;
 
     // Create empty slots
-    final List<Map<String, dynamic>?> ordered = List.filled(totalBatteries, null);
+    final List<Map<String, dynamic>?> ordered = List.filled(
+      totalBatteries,
+      null,
+    );
     final now = DateTime.now();
     // final  timeStamp="${now.hour.toString().padLeft(2, '0')}:"
     //     "${now.minute.toString().padLeft(2, '0')}:"
@@ -226,14 +230,28 @@ json={
       // final int? pos = int.tryParse(indexStr.replaceAll("b", ""));
 
       final int? pos = int.tryParse(
-        (map["index"] ?? "").toString().toLowerCase().replaceAll(RegExp(r'[^0-9]'), ''),
+        (map["index"] ?? "").toString().toLowerCase().replaceAll(
+          RegExp(r'[^0-9]'),
+          '',
+        ),
       );
 
       if (pos == null || pos <= 0 || pos > totalBatteries) continue;
 
       if (!isLiveData.value || map["valid"].toString() == "true") {
         map["time"] = now;
-      } else {
+      }
+ /*     else if ((batInfo.value[pos - 1]?["%"].toString()) !=
+              map["%"].toString() ||
+          (batInfo.value[pos - 1]?["temp"].toString()) !=
+              map["temp"].toString() ||
+          (batInfo.value[pos - 1]?["voltage"].toString()) !=
+              map["voltage"].toString()) {
+        map["time"] = now;
+        map["valid"] = true;
+      }
+      */
+      else {
         map["time"] = batInfo.value[pos - 1]?["time"];
       }
       ordered[pos - 1] = map; // b1 → index 0
@@ -243,7 +261,15 @@ json={
     batInfo.value = List.generate(totalBatteries, (i) {
       return ordered[i] ??
           // {};
-          {"index": "B${i + 1}", "mac": "", "voltage": 0, "%": 0, "temp": 0, "BSN": "", "valid": false};
+          {
+            "index": "B${i + 1}",
+            "mac": "",
+            "voltage": 0,
+            "%": 0,
+            "temp": 0,
+            "BSN": "",
+            "valid": false,
+          };
     });
 
     printFunc("✅ LIVE DATA PARSED \n(${batInfo.value} batteries)");
@@ -285,7 +311,10 @@ json={
       // JSON not complete yet → wait for more chunks
       if (endIndex == -1) return;
 
-      final jsonString = _notifSeekerInfoyBuffer.substring(startIndex, endIndex + 1);
+      final jsonString = _notifSeekerInfoyBuffer.substring(
+        startIndex,
+        endIndex + 1,
+      );
 
       // Remove processed JSON from buffer
       _notifSeekerInfoyBuffer = _notifSeekerInfoyBuffer.substring(endIndex + 1);
@@ -339,12 +368,18 @@ json={
   // ===============================
   // WRITE WITH ACK + TIMEOUT
   // ===============================
-  Future<bool> _sendWithAck(var payload, {Duration timeout = const Duration(seconds: 15)}) async {
+  Future<bool> _sendWithAck(
+    var payload, {
+    Duration timeout = const Duration(seconds: 15),
+  }) async {
     printFunc("📥 RX: $payload");
 
     _ackCompleter = Completer<bool>();
 
-    await ble.writeCharacteristicWithResponse(_writeChar, value: utf8.encode((payload) + "\n"));
+    await ble.writeCharacteristicWithResponse(
+      _writeChar,
+      value: utf8.encode((payload) + "\n"),
+    );
 
     try {
       bool result = await _ackCompleter!.future.timeout(timeout);
@@ -413,7 +448,10 @@ json={
   // ===============================
   // PROGRAM MACs (MAIN FLOW)
   // ===============================
-  Future<bool> programMacs({required List<String> macList, int retryCount = 2}) async {
+  Future<bool> programMacs({
+    required List<String> macList,
+    int retryCount = 2,
+  }) async {
     isBusy.value = true;
     errorText.value = null;
 
@@ -496,7 +534,9 @@ json={
         errorText.value = "Retrying to Link Battery (${index.toUpperCase()})";
       } else if (attempt == 2) {
         Future.delayed(Duration(milliseconds: 300));
-        printFunc("Attempt 2 is done :: \n${_lastChangeErrorReason} : safe : $safePair");
+        printFunc(
+          "Attempt 2 is done :: \n${_lastChangeErrorReason} : safe : $safePair",
+        );
         if ((_lastChangeErrorReason == "DEVICE_NOT_AVAILABLE") && safePair) {
           popUpDialog(
             context,
@@ -508,7 +548,12 @@ json={
             onPressRightBtn: () async {
               printFunc("YEs pair"); //     () async {
               Navigator.of(context, rootNavigator: true).pop();
-              await changeTrackr(context, macId: macId, index: index, safePair: false);
+              await changeTrackr(
+                context,
+                macId: macId,
+                index: index,
+                safePair: false,
+              );
             },
             onPressLeftBtn: () {
               printFunc("No pair"); //     () async {
@@ -566,7 +611,10 @@ json={
     Duration timeout = Duration(seconds: interval - 1);
     printFunc("TX : ${payload}");
     try {
-      await ble.writeCharacteristicWithResponse(_writeChar, value: utf8.encode("$payload\n"));
+      await ble.writeCharacteristicWithResponse(
+        _writeChar,
+        value: utf8.encode("$payload\n"),
+      );
     } catch (e) {
       printFunc("❌ BLE write failed (likely disconnected): $e");
       stopBatInfoPolling(); // VERY IMPORTANT
@@ -590,7 +638,10 @@ json={
     printFunc("DEVICE_INFO\n");
 
     try {
-      await ble.writeCharacteristicWithResponse(_notifyDeviceInfo, value: utf8.encode("DEVICE_INFO\n"));
+      await ble.writeCharacteristicWithResponse(
+        _notifyDeviceInfo,
+        value: utf8.encode("DEVICE_INFO\n"),
+      );
     } catch (e) {
       errorText.value = "❌ Fetch Device detail failed"; //: $e";
       printFunc("Exception Device detail failed : ${errorText.value}");
@@ -609,7 +660,10 @@ json={
     printFunc(cmd);
 
     try {
-      await ble.writeCharacteristicWithResponse(_notifyDeviceInfo, value: utf8.encode("$cmd"));
+      await ble.writeCharacteristicWithResponse(
+        _notifyDeviceInfo,
+        value: utf8.encode("$cmd"),
+      );
       await getSeekrInfo();
     } catch (e) {
       errorText.value = "❌ Clear configuration failed"; //: $e";
@@ -629,7 +683,10 @@ json={
     printFunc("Sending Cmd : $cmd");
 
     try {
-      await ble.writeCharacteristicWithResponse(_notifyDeviceInfo, value: utf8.encode("$cmd"));
+      await ble.writeCharacteristicWithResponse(
+        _notifyDeviceInfo,
+        value: utf8.encode("$cmd"),
+      );
       // await getSeekrInfo();
     } catch (e) {
       errorText.value = "❌ Battery configuration failed"; //: $e";
@@ -649,7 +706,10 @@ json={
     printFunc(cmd);
 
     try {
-      await ble.writeCharacteristicWithResponse(_notifyDeviceInfo, value: utf8.encode("$cmd"));
+      await ble.writeCharacteristicWithResponse(
+        _notifyDeviceInfo,
+        value: utf8.encode("$cmd"),
+      );
       await getSeekrInfo();
     } catch (e) {
       errorText.value = "❌ Config serial number failed"; //: $e";

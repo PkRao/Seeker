@@ -31,7 +31,10 @@ class _ProvisioningPageState extends State<ProvisioningPage> {
       body: Column(
         children: [
           const SizedBox(height: 8),
-          const Text('Scan Seecker QR (MAC ID expected)', style: TextStyle(color: Colors.white70)),
+          const Text(
+            'Scan Seecker QR (MAC ID expected)',
+            style: TextStyle(color: Colors.white70),
+          ),
           const SizedBox(height: 12),
           GestureDetector(
             onTap: () async {
@@ -64,7 +67,9 @@ class _ProvisioningPageState extends State<ProvisioningPage> {
                           fontSize: 16,
                           color: AppColors.darkBg,
                           fontWeight: FontWeight.w500,
-                          shadows: [Shadow(color: Colors.black, blurRadius: 0.4)],
+                          shadows: [
+                            Shadow(color: Colors.black, blurRadius: 0.4),
+                          ],
                         ),
                       ),
                     ],
@@ -80,12 +85,27 @@ class _ProvisioningPageState extends State<ProvisioningPage> {
           ),
           Row(
             children: [
-              Expanded(child: Container(margin: EdgeInsets.only(left: 30), height: 1, color: Colors.black)),
+              Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(left: 30),
+                  height: 1,
+                  color: Colors.black,
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(15),
-                child: Text("OR", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                child: Text(
+                  "OR",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
               ),
-              Expanded(child: Container(margin: EdgeInsets.only(right: 30), height: 1, color: Colors.black)),
+              Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(right: 30),
+                  height: 1,
+                  color: Colors.black,
+                ),
+              ),
             ],
           ),
           TextFeildNewUser(
@@ -93,10 +113,17 @@ class _ProvisioningPageState extends State<ProvisioningPage> {
             Controller: macIdController,
             onChanged: (value) {},
             enable: true,
-            etext: macIdController.text.trim().isEmpty ? "Please Enter MAC-Id" : "",
+            etext:
+                macIdController.text.trim().isEmpty
+                    ? "Please Enter MAC-Id"
+                    : "",
           ),
           const SizedBox(height: 12),
-          if (scanned != null) Text('Scanned: $scanned', style: const TextStyle(color: Colors.white70)),
+          if (scanned != null)
+            Text(
+              'Scanned: $scanned',
+              style: const TextStyle(color: Colors.white70),
+            ),
         ],
       ),
     );

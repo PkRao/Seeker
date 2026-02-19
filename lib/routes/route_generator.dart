@@ -16,11 +16,17 @@ class RouteGenerator {
       case AppRoutes.deviceDetail:
         final args = settings.arguments as Map?;
         final bluetooth = args?['bluetooth'];
-        return MaterialPageRoute(builder: (_) => DeviceDetailPage(bluetooth: bluetooth));
+        return MaterialPageRoute(
+          builder: (_) => DeviceDetailPage(bluetooth: bluetooth),
+        );
       case AppRoutes.provisioning:
         return MaterialPageRoute(builder: (_) => const ProvisioningPage());
       default:
-        return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Page not found'))));
+        return MaterialPageRoute(
+          builder:
+              (_) =>
+                  const Scaffold(body: Center(child: Text('Page not found'))),
+        );
     }
   }
 }

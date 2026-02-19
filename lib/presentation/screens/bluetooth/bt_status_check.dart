@@ -21,7 +21,9 @@ class _BluetoothMainScreenState extends State<BluetoothMainScreen> {
   @override
   void initState() {
     super.initState();
-    _adapterStateStateSubscription = FlutterBluePlus.adapterState.listen((state) {
+    _adapterStateStateSubscription = FlutterBluePlus.adapterState.listen((
+      state,
+    ) {
       _adapterState = state;
       if (mounted) {
         setState(() {});

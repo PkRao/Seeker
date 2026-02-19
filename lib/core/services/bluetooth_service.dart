@@ -17,16 +17,19 @@ class BluetoothService {
   FlutterReactiveBle get ble => _ble;
   final Map<String, DiscoveredDevice> _devices = {};
   final Map<String, bool> connectionStatus = {};
-  final ValueNotifier<Map<String, bool>> connectionStatusNotifier = ValueNotifier({});
+  final ValueNotifier<Map<String, bool>> connectionStatusNotifier =
+      ValueNotifier({});
 
-  final Map<String, StreamSubscription<ConnectionStateUpdate>> _connectionSubs = {};
+  final Map<String, StreamSubscription<ConnectionStateUpdate>> _connectionSubs =
+      {};
 
   DiscoveredDevice? connectedDevice;
   String? connectedDeviceId;
   bool isScanning = false;
   StreamSubscription<DiscoveredDevice>? _scanSub;
 
-  final _devicesController = StreamController<List<DiscoveredDevice>>.broadcast();
+  final _devicesController =
+      StreamController<List<DiscoveredDevice>>.broadcast();
 
   Stream<List<DiscoveredDevice>> get devicesStream => _devicesController.stream;
 
@@ -38,11 +41,16 @@ class BluetoothService {
   }
 
   // ---------------- SCAN ----------------
-  void startScan({Duration timeout = const Duration(seconds: 10)}) {
+  void startScan({
+    bool isQr = false,
+    String mac = "",
+    Duration timeout = const Duration(seconds: 10),
+  }) {
     _devices.clear();
     stopScan();
 
-    if (connectedDevice != null && (connectionStatus[connectedDevice!.id] ?? false)) {
+    if (connectedDevice != null &&
+        (connectionStatus[connectedDevice!.id] ?? false)) {
       _devices[connectedDevice!.id] = connectedDevice!;
     }
 
@@ -59,22 +67,34 @@ class BluetoothService {
         )
         .listen(
           (device) {
-            if (!device.name.toLowerCase().startsWith('ble_')) {
+            // if (!device.name.toLowerCase().startsWith('ble_')) {
+            if (!device.name.toLowerCase().startsWith('aird')) {
               return;
             }
-            // if (!(device.serviceUuids as List).contains('f043176a-5168-11ee-be56-0242ac120021')) {
-            //   return;
-            //
-            // }
-            // printFunc("condition : ${(!(device.serviceUuids).contains(Uuid.parse('f043176a-5168-11ee-be56-0242ac120021')))}");
+            printFunc("isQr : $isQr - mac : $mac - ${device.id}");
+            if (isQr &&
+                (!(device.id.toString().toLowerCase() == mac.toLowerCase()))) {
+              return;
+            }
             printFunc("Devcie : ${device.name}");
             printFunc("UUIDs : ${device.serviceUuids}");
+            printFunc("lastId : ${lastId}");
             _devices[device.id] = device;
             connectionStatus.putIfAbsent(device.id, () => false);
-            // printFunc("device id : ${device.id} - state : ${connectionStatus[lastId]} ");
-            if (lastId == device.id && connectionStatus[lastId] == false) {
+
+            printFunc(
+              "device id : ${device.id} - state : ${connectionStatus[lastId]} ",
+            );
+            if ((!isQr) &&
+                (lastId.toString().toLowerCase() == device.id.toLowerCase() &&
+                    connectionStatus[lastId] == false)) {
               autoConnect = true;
               stopScan();
+            }
+            if (isQr &&
+                mac.toLowerCase() == device.id.toString().toLowerCase()) {
+              stopScan();
+              connect(mac);
             }
             _emitDevices();
           },
@@ -85,7 +105,7 @@ class BluetoothService {
 
     Future.delayed(timeout, () {
       stopScan();
-      // if (lastId != null && autoConnect) autoReconnect(lastId);
+      if ((!isQr) && lastId != null && autoConnect) autoReconnect(lastId);
     });
   }
 
@@ -108,7 +128,10 @@ class BluetoothService {
     bool ignoreFirstFalseDisconnect = true;
 
     final sub = _ble
-        .connectToDevice(id: deviceId, connectionTimeout: const Duration(seconds: 12))
+        .connectToDevice(
+          id: deviceId,
+          connectionTimeout: const Duration(seconds: 12),
+        )
         .listen(
           (ConnectionStateUpdate update) async {
             printFunc(
@@ -119,7 +142,9 @@ class BluetoothService {
               printFunc("✅ Connected to $deviceId");
 
               connectionStatus[deviceId] = true;
-              connectionStatusNotifier.value = Map.from(connectionStatus); // ✅ ADD
+              connectionStatusNotifier.value = Map.from(
+                connectionStatus,
+              ); // ✅ ADD
 
               connectedDeviceId = deviceId;
               connectedDevice = _devices[deviceId] ?? connectedDevice;
@@ -148,8 +173,12 @@ class BluetoothService {
               printFunc("❌ Real disconnect from $deviceId");
 
               connectionStatus[deviceId] = false;
-              connectionStatusNotifier.value = Map.from(connectionStatus); // ✅ ADD
-              printFunc("Conection notifier : ${connectionStatusNotifier.value["7C:00:37:A1:71:AA"]}");
+              connectionStatusNotifier.value = Map.from(
+                connectionStatus,
+              ); // ✅ ADD
+              printFunc(
+                "Conection notifier : ${connectionStatusNotifier.value["7C:00:37:A1:71:AA"]}",
+              );
               if (connectedDeviceId == deviceId) {
                 connectedDeviceId = null;
                 connectedDevice = null;
@@ -163,7 +192,9 @@ class BluetoothService {
           onError: (err) {
             printFunc("❌ Connection Error: $err");
             connectionStatus[deviceId] = false;
-            connectionStatusNotifier.value = Map.from(connectionStatus); // ✅ ADD
+            connectionStatusNotifier.value = Map.from(
+              connectionStatus,
+            ); // ✅ ADD
             _emitDevices();
             if (!completer.isCompleted) completer.complete(false);
           },
@@ -181,48 +212,6 @@ class BluetoothService {
     isConnected.value = result;
     return result;
   }
-
-  // ---------------- Restore Connection ---------------- not in use
-
-  /*
-  Future<void> restoreConnection() async {
-    final lastId = HiveService().getString(HiveService.lastSavedDevice);
-
-    if (lastId == null || lastId.isEmpty) {
-      printFunc("No previous device to restore");
-      return;
-    }
-    printFunc("🔄 Restoring BLE connection to $lastId");
-    try {
-      // 🟡 Ensure device exists in device list even if scan doesn't emit
-      _devices.putIfAbsent(
-        lastId,
-            () => DiscoveredDevice(
-          id: lastId,
-          name: "Previously Connected Device",
-          serviceUuids: [],
-          manufacturerData: Uint8List.fromList([0x01, 0x02]),
-          rssi: 0, serviceData: {},
-        ),
-      );
-      _emitDevices();
-      // Force disconnect ghost connection
-      await disconnect(lastId);
-      await Future.delayed(const Duration(milliseconds: 800));
-      // Fresh reconnect
-      final ok = await connect(lastId);
-      if (ok) {
-        printFunc("✅ Connection restored successfully");
-      } else {
-        printFunc("⚠️ Restore reconnect failed, starting scan");
-        startScan();
-      }
-    } catch (e) {
-      printFunc("❌ Restore failed: $e");
-      startScan();
-    }
-  }
-*/
 
   // ---------------- Disconnect previous connection ----------------
   Future<void> cleanupStaleConnection() async {
@@ -279,7 +268,9 @@ class BluetoothService {
 
   void dispose() {
     stopScan();
-    for (final s in List<StreamSubscription<ConnectionStateUpdate>>.from(_connectionSubs.values)) {
+    for (final s in List<StreamSubscription<ConnectionStateUpdate>>.from(
+      _connectionSubs.values,
+    )) {
       try {
         s.cancel();
       } catch (_) {}

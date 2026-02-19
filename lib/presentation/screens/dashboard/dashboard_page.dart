@@ -209,9 +209,12 @@ class _DashboardPageState extends State<DashboardPage> {
 // dashboard.dart
 import 'dart:async';
 
+import 'package:dfi_seekr/core/constants/app_colors.dart';
 import 'package:dfi_seekr/core/services/generalMethods.dart';
 import 'package:dfi_seekr/core/services/hive_service.dart';
 import 'package:dfi_seekr/core/utils/logger.dart';
+import 'package:dfi_seekr/presentation/widgets/dialogBox.dart';
+import 'package:dfi_seekr/presentation/widgets/qr_code_reader.dart';
 import 'package:dfi_seekr/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
@@ -231,7 +234,9 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   final BluetoothService _bluetooth = BluetoothService();
 
-  final ValueNotifier<List<DiscoveredDevice>> devicesNotifier = ValueNotifier([]);
+  final ValueNotifier<List<DiscoveredDevice>> devicesNotifier = ValueNotifier(
+    [],
+  );
   final ValueNotifier<bool> isScanning = ValueNotifier(false);
 
   StreamSubscription<List<DiscoveredDevice>>? _devicesSub;
@@ -271,7 +276,11 @@ class _DashboardPageState extends State<DashboardPage> {
     if (_bluetooth.isConnected.value == true) {
       // ✅ Auto close the page
       if (mounted) {
-        Navigator.pushNamed(context, AppRoutes.deviceDetail, arguments: {"bluetooth": _bluetooth});
+        Navigator.pushNamed(
+          context,
+          AppRoutes.deviceDetail,
+          arguments: {"bluetooth": _bluetooth},
+        );
       }
     }
   }
@@ -286,12 +295,16 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  Future<void> discoverDevices() async {
+  Future<void> discoverDevices({bool isQr = false, String mac = ""}) async {
     isScanning.value = true;
     devicesNotifier.value = [];
     devicesNotifier.value.clear();
 
-    _bluetooth.startScan(timeout: const Duration(seconds: 10));
+    _bluetooth.startScan(
+      isQr: isQr,
+      mac: mac,
+      timeout: const Duration(seconds: 10),
+    );
 
     Future.delayed(const Duration(seconds: 10), () {
       _bluetooth.stopScan();
@@ -329,7 +342,80 @@ class _DashboardPageState extends State<DashboardPage> {
     getSize(context);
     return SeekerBaseScaffold(
       isDashboard: true,
-      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          TextButton(
+            onPressed: () async {
+              final mac = await QRScannerWidget(context, "Scan Seeker QR Code");
+              if (mac != "" && mac != null)
+                popUpDialog(
+                  context,
+                  "Ok",
+                  "",
+                  title: "QR SCANNER",
+                  content: '''\n\nSeeker Scanned Mac Id -\n  $mac''',
+                  onPressLeftBtn: () async {
+                    printFunc("no pair");
+                    Navigator.of(context, rootNavigator: true).pop();
+                  },
+                  onPressRightBtn: () async {
+                    _bluetooth.stopScan();
+                    isScanning.value = false;
+
+                    Navigator.of(context, rootNavigator: true).pop();
+                    await discoverDevices(isQr: true, mac: mac.toString());
+
+                    Future.delayed(Duration(seconds: 11), () {
+                      if (devicesNotifier.value.isEmpty) {
+                        popUpDialog(
+                          context,
+                          "Ok",
+                          "",
+                          title: "Failed",
+                          content: '''\n\nScanned device not found''',
+                          onPressLeftBtn: () async {
+                            printFunc("no pair");
+                            Navigator.of(context, rootNavigator: true).pop();
+                          },
+                          onPressRightBtn: () async {
+                            _bluetooth.stopScan();
+                            isScanning.value = false;
+
+                            Navigator.of(context, rootNavigator: true).pop();
+                          },
+                        );
+                      }
+                    });
+                  },
+                );
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 20, top: 10),
+              padding: const EdgeInsets.only(
+                left: 6,
+                right: 6,
+                top: 3,
+                bottom: 3,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white10,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.neonBlueSoft, width: 2),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black26, blurRadius: 6),
+                ],
+              ),
+              child: const Icon(
+                Icons.qr_code_scanner_outlined,
+                color: AppColors.neonAccent,
+                size: 20,
+              ),
+            ),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           const SizedBox(height: 12),
@@ -352,7 +438,10 @@ class _DashboardPageState extends State<DashboardPage> {
                     const SizedBox(height: 10),
                     Text(
                       scanning ? "Scanning..." : "Tap to Scan",
-                      style: const TextStyle(color: Colors.white70, fontSize: 16),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
+                      ),
                     ),
                   ],
                 ),
@@ -382,19 +471,28 @@ class _DashboardPageState extends State<DashboardPage> {
                                 children: [
                                   !scanning
                                       ? SizedBox(
-                                        child: Image.asset('assets/images/dreamFly2.jpg'),
+                                        child: Image.asset(
+                                          'assets/images/dreamFly2.jpg',
+                                        ),
                                         width: 200,
                                         height: 200,
                                       )
                                       : GlowBluetoothIcon(
                                         scanning: scanning,
-                                        icon: Image.asset('assets/images/dreamFly2.jpg'),
+                                        icon: Image.asset(
+                                          'assets/images/dreamFly2.jpg',
+                                        ),
                                         width: 200,
                                         height: 200,
                                       ),
                                   Text(
-                                    scanning ? "\n\n\n\n\n\n\n" : "No devices found\n\n\n\n\n\n\n",
-                                    style: TextStyle(fontSize: 14, color: Colors.white54),
+                                    scanning
+                                        ? "\n\n\n\n\n\n\n"
+                                        : "No devices found\n\n\n\n\n\n\n",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white54,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -405,9 +503,12 @@ class _DashboardPageState extends State<DashboardPage> {
                 }
 
                 return ValueListenableBuilder<Map<String, bool>>(
-                  valueListenable: _bluetooth.connectionStatusNotifier, // ✅ LISTEN
+                  valueListenable: _bluetooth.connectionStatusNotifier,
+                  // ✅ LISTEN
                   builder: (context, statusMap, _) {
-                    printFunc("Conection notifier updated : ${statusMap["7C:00:37:A1:71:AA"]}");
+                    printFunc(
+                      "Conection notifier updated : ${statusMap["7C:00:37:A1:71:AA"]}",
+                    );
 
                     return ListView.builder(
                       itemCount: devices.length,

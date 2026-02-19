@@ -109,7 +109,11 @@ Future<String?> QRScannerWidget(BuildContext context, String title) {
           elevation: 6,
           title: Text(
             title,
-            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           content: const QRScannerScreen(),
         ),
@@ -181,7 +185,11 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             padding: EdgeInsets.only(bottom: 8),
             child: Text(
               "Scan valid MAC ID",
-              style: TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
 

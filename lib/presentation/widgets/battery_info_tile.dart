@@ -10,7 +10,11 @@ class BatteryInfoTile extends StatefulWidget {
   final Map data;
   final MacProgrammingController macController;
 
-  const BatteryInfoTile({super.key, required this.data, required this.macController});
+  const BatteryInfoTile({
+    super.key,
+    required this.data,
+    required this.macController,
+  });
 
   @override
   State<BatteryInfoTile> createState() => _BatteryInfoTileState();
@@ -73,19 +77,40 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             gradient: LinearGradient(
-              colors: isLinked ? [Colors.white30, Colors.white10] : [AppColors.bgStart, AppColors.bgEnd],
+              colors:
+                  isLinked
+                      ? [Colors.white30, Colors.white10]
+                      : [AppColors.bgStart, AppColors.bgEnd],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            border: Border.all(color: isLinked ? Colors.white54 : Colors.white24, width: 2),
-            boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 18, offset: Offset(0, 6))],
+            border: Border.all(
+              color: isLinked ? Colors.white54 : Colors.white24,
+              width: 2,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black54,
+                blurRadius: 18,
+                offset: Offset(0, 6),
+              ),
+            ],
           ),
           // child: SingleChildScrollView(
           // physics: const NeverScrollableScrollPhysics(),
           // child:        FittedBox(fit:BoxFit.scaleDown,
           child:
               isLinked
-                  ? _linkedUI(context, live, bsn, mac, charge * 1.0, voltage, temperature, time)
+                  ? _linkedUI(
+                    context,
+                    live,
+                    bsn,
+                    mac,
+                    charge * 1.0,
+                    voltage,
+                    temperature,
+                    time,
+                  )
                   : _notLinkedUI(context),
           // ),
           // ),
@@ -107,13 +132,6 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
   ) {
     final now = DateTime.now();
     final lastUpdate = (now.difference(time)).inSeconds;
-    // final timeStamp="${now.hour.toString().padLeft(2, '0')}:"
-    //     "${now.minute.toString().padLeft(2, '0')}:"
-    //     "${now.second.toString().padLeft(2, '0')}";
-    printFunc(" condition last update $lastUpdate :${(lastUpdate > 30 && lastUpdate < 790)}");
-    printFunc(" condition last update  :${(lastUpdate < 790)}");
-    printFunc(" condition last update  :${(lastUpdate > 30)}");
-    printFunc("----------------");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -125,9 +143,9 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
               height: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: ((live && lastUpdate <= 30)
+                color: ((lastUpdate <= 35)
                         ? Colors.greenAccent
-                        : (lastUpdate > 30 && lastUpdate <= 60)
+                        : (lastUpdate > 35 && lastUpdate <= 60)
                         ? Colors.yellowAccent.shade700
                         : (lastUpdate > 60 && lastUpdate < 120)
                         ? Colors.orangeAccent
@@ -135,7 +153,8 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
                     .withOpacity(0.8),
                 boxShadow: [
                   BoxShadow(
-                    color: (!(live) ? Colors.greenAccent : Colors.redAccent).withOpacity(0.8),
+                    color: (!(live) ? Colors.greenAccent : Colors.redAccent)
+                        .withOpacity(0.8),
                     blurRadius: 8,
                     spreadRadius: 1,
                   ),
@@ -144,7 +163,11 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
             ),
             Text(
               "Battery- ${(widget.data["index"]).toString().toUpperCase()}",
-              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const Spacer(),
             InkWell(
@@ -153,8 +176,12 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
                   isLinking = true;
                 });
                 printFunc("data : ${widget.data}");
-
-                await Future.delayed(Duration(seconds: widget.macController.interval - 3));
+                await widget.macController.deleteTrackr(
+                  "${widget.data["index"]}",
+                );
+                await Future.delayed(
+                  Duration(seconds: widget.macController.interval - 3),
+                );
 
                 setState(() {
                   isLinking = false;
@@ -164,12 +191,19 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
                   isLinking
                       ? const Center(
                         child: SizedBox(
-                          width: 22 ,
+                          width: 22,
                           height: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.cyanAccent),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.cyanAccent,
+                          ),
                         ),
                       )
-                      : const Icon(Icons.link_off, color: Colors.redAccent, size: 20),
+                      : const Icon(
+                        Icons.link_off,
+                        color: Colors.redAccent,
+                        size: 20,
+                      ),
             ),
           ],
         ),
@@ -218,7 +252,7 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
                     label: "lastUpdate",
                     value: "${lastUpdate}",
                     glowColor: batteryColor(charge),
-                  ), */
+                  ),*/
                   _valueTile(
                     icon: Icons.battery_charging_full,
                     label: "Charge",
@@ -279,7 +313,10 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
                     child: SizedBox(
                       width: 22,
                       height: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.cyanAccent),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.cyanAccent,
+                      ),
                     ),
                   )
                   : OutlinedButton.icon(
@@ -301,11 +338,17 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
                       );
 
                       // ⏳ keep loader for 10 seconds
-                      await Future.delayed(Duration(seconds: widget.macController.interval - 1));
+                      await Future.delayed(
+                        Duration(seconds: widget.macController.interval - 1),
+                      );
 
                       setState(() => isLinking = false);
                     },
-                    icon: const Icon(Icons.link, size: 18, color: Colors.cyanAccent),
+                    icon: const Icon(
+                      Icons.link,
+                      size: 18,
+                      color: Colors.cyanAccent,
+                    ),
                     label: const Text(
                       "Link Battery",
                       maxLines: 1,
@@ -314,7 +357,9 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
 
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.cyanAccent),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
         ),
@@ -333,7 +378,11 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (title) Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+        if (title)
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white54, fontSize: 12),
+          ),
         const SizedBox(height: 4),
         Row(
           children: [
@@ -362,7 +411,11 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
             // value text
             Text(
               "${value}",
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),

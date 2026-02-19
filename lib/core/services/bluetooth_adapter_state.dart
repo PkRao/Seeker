@@ -4,7 +4,9 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class BluetoothStateManager {
   // Notifier that UI can listen to
-  static ValueNotifier<BluetoothAdapterState> btStateNotifier = ValueNotifier(BluetoothAdapterState.off);
+  static ValueNotifier<BluetoothAdapterState> btStateNotifier = ValueNotifier(
+    BluetoothAdapterState.off,
+  );
 
   static bool _isStarted = false;
 

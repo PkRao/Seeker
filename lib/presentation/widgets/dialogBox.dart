@@ -28,7 +28,11 @@ popUpDialog(
             children: [
               Text(
                 title,
-                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               IconButton(
                 onPressed: () {
@@ -56,7 +60,13 @@ popUpDialog(
                     end: Alignment.bottomRight,
                   ),
                   border: Border.all(color: Colors.white12, width: 1.0),
-                  boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 18, offset: const Offset(0, 6))],
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black54,
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
@@ -88,7 +98,10 @@ popUpDialog(
 
                     // 🔽 FIXED BUTTONS
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0,
+                        vertical: 16,
+                      ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -131,8 +144,14 @@ Future<bool?> showExitDialog(BuildContext context) {
           title: const Text("Exit App"),
           content: const Text("Are you sure you want to exit?"),
           actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text("No")),
-            ElevatedButton(onPressed: () => Navigator.of(context).pop(true), child: const Text("Yes")),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text("No"),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text("Yes"),
+            ),
           ],
         ),
   );

@@ -1,4 +1,4 @@
 class AppConst {
-  static const String appVersion = "0.3.3";
+  static const String appVersion = "0.3.4";
   static bool testing = true;
 }

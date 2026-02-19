@@ -33,14 +33,18 @@ class DeviceCardAnimated extends StatefulWidget {
   State<DeviceCardAnimated> createState() => _DeviceCardAnimatedState();
 }
 
-class _DeviceCardAnimatedState extends State<DeviceCardAnimated> with SingleTickerProviderStateMixin {
+class _DeviceCardAnimatedState extends State<DeviceCardAnimated>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   bool connecting = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 600))..forward();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..forward();
   }
 
   @override
@@ -73,10 +77,17 @@ class _DeviceCardAnimatedState extends State<DeviceCardAnimated> with SingleTick
           onTap: () async {
             if (isConnected) {
               await Future.delayed(Duration(seconds: 1));
-              Navigator.pushNamed(context, AppRoutes.deviceDetail, arguments: {"bluetooth": widget.service});
+              Navigator.pushNamed(
+                context,
+                AppRoutes.deviceDetail,
+                arguments: {"bluetooth": widget.service},
+              );
             }
           },
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
           title: Text(
             widget.name,
             maxLines: 1,
@@ -98,7 +109,10 @@ class _DeviceCardAnimatedState extends State<DeviceCardAnimated> with SingleTick
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 center: Alignment.topCenter,
-                colors: [_rssiColor(widget.rssi).withOpacity(0.9), Colors.transparent],
+                colors: [
+                  _rssiColor(widget.rssi).withOpacity(0.9),
+                  Colors.transparent,
+                ],
               ),
             ),
             child: Column(
@@ -106,7 +120,10 @@ class _DeviceCardAnimatedState extends State<DeviceCardAnimated> with SingleTick
               children: [
                 Icon(Icons.device_hub, color: _rssiColor(widget.rssi)),
                 const SizedBox(height: 4),
-                Text(widget.rssi.toString(), style: const TextStyle(color: Colors.white, fontSize: 11)),
+                Text(
+                  widget.rssi.toString(),
+                  style: const TextStyle(color: Colors.white, fontSize: 11),
+                ),
               ],
             ),
           ),
@@ -135,18 +152,29 @@ class _DeviceCardAnimatedState extends State<DeviceCardAnimated> with SingleTick
                               ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                               : Container(
                                 key: const ValueKey('connected'),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(10),
                                   gradient: const LinearGradient(
-                                    colors: [AppColors.neonBlue, AppColors.neonAccent],
+                                    colors: [
+                                      AppColors.neonBlue,
+                                      AppColors.neonAccent,
+                                    ],
                                   ),
                                 ),
-                                child: const Text('Connected', style: TextStyle(color: Colors.black)),
+                                child: const Text(
+                                  'Connected',
+                                  style: TextStyle(color: Colors.black),
+                                ),
                               ),
                       // const Text('connected'),
                     )
@@ -169,7 +197,9 @@ class _DeviceCardAnimatedState extends State<DeviceCardAnimated> with SingleTick
                         // if another device is connected, disconnect it first via service
                         if (widget.service.connectedDeviceId != null &&
                             widget.service.connectedDeviceId != widget.id) {
-                          await widget.service.disconnect(widget.service.connectedDeviceId!);
+                          await widget.service.disconnect(
+                            widget.service.connectedDeviceId!,
+                          );
                         }
 
                         final ok = await widget.onConnect();
@@ -188,13 +218,17 @@ class _DeviceCardAnimatedState extends State<DeviceCardAnimated> with SingleTick
                           // );                  // Navigator.pushNamed(context, AppRoutes.deviceDetail, arguments: {"deviceId": widget.id});
                         }
                       },
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.white10),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white10,
+                      ),
                       child:
                           connecting
                               ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                               : const Text('Connect'),
                     ),

@@ -17,7 +17,9 @@ class BluetoothOffScreen extends StatelessWidget {
       Icons.bluetooth_disabled,
       size: 200.0,
       color: AppColors.neonBlue.withOpacity(0.9),
-      shadows: [Shadow(color: Colors.black, blurRadius: 0.1, offset: Offset(0.4, 0.4))],
+      shadows: [
+        Shadow(color: Colors.black, blurRadius: 0.1, offset: Offset(0.4, 0.4)),
+      ],
     );
   }
 
@@ -42,7 +44,9 @@ class BluetoothOffScreen extends StatelessWidget {
           elevation: MaterialStatePropertyAll(5),
           backgroundColor: MaterialStatePropertyAll(AppColors.darkBg),
           shadowColor: MaterialStatePropertyAll(Colors.black),
-          shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+          shape: MaterialStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
         ),
         child: Text(
           'TURN ON',
@@ -76,7 +80,8 @@ class BluetoothOffScreen extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppColors.bgStart, AppColors.bgEnd], // Your gradient colors
+            colors: [AppColors.bgStart, AppColors.bgEnd],
+            // Your gradient colors
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

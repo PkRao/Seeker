@@ -34,7 +34,10 @@ class SeekrApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: Colors.transparent,
-        appBarTheme: const AppBarTheme(backgroundColor: Colors.transparent, elevation: 0),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
       ),
       initialRoute: AppRoutes.splash,
       onGenerateRoute: RouteGenerator.generateRoute,

@@ -70,7 +70,10 @@ class SeekerBaseScaffold extends StatelessWidget {
                 Padding(
                   padding:
                       applyPadding
-                          ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10)
+                          ? const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          )
                           : EdgeInsets.zero,
                   child:
                       btCheck
@@ -97,7 +100,11 @@ class SeekerBaseScaffold extends StatelessWidget {
                   child: Center(
                     child: Text(
                       "v ${AppConst.appVersion}",
-                      style: const TextStyle(fontSize: 11, color: Colors.white38, letterSpacing: 0.8),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.white38,
+                        letterSpacing: 0.8,
+                      ),
                     ),
                   ),
                 ),

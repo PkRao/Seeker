@@ -16,7 +16,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnim;
   final BluetoothService _bluetooth = BluetoothService();
@@ -24,8 +25,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 2400))
-      ..repeat(reverse: true);
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..repeat(reverse: true);
 
     _scaleAnim = Tween<double>(
       begin: 1.0,
@@ -60,14 +63,22 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 ring(300, 0.24, 0.2, _controller),
                 ScaleTransition(
                   scale: _scaleAnim,
-                  child: Image.asset('assets/images/dreamFly2.jpg', width: 200, height: 200),
+                  child: Image.asset(
+                    'assets/images/dreamFly2.jpg',
+                    width: 200,
+                    height: 200,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             Text(
               'Seekr',
-              style: TextStyle(color: AppColors.neonBlue, fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.neonBlue,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
