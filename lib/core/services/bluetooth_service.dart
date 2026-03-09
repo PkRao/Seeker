@@ -67,8 +67,8 @@ class BluetoothService {
         )
         .listen(
           (device) {
-            // if (!device.name.toLowerCase().startsWith('ble_')) {
-            if (!device.name.toLowerCase().startsWith('aird')) {
+            if (!device.name.toLowerCase().startsWith('ble_')) {
+            // if (!device.name.toLowerCase().startsWith('aird')) {
               return;
             }
             printFunc("isQr : $isQr - mac : $mac - ${device.id}");
