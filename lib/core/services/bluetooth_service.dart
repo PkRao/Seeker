@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dfi_seekr/core/constants/constants.dart';
 import 'package:dfi_seekr/core/services/hive_service.dart';
 import 'package:dfi_seekr/core/utils/logger.dart';
 import 'package:flutter/cupertino.dart';
@@ -56,7 +57,7 @@ class BluetoothService {
 
     isScanning = true;
     final lastId = HiveService().getString(HiveService.lastSavedDevice);
-    bool autoConnect = false;
+    Set<String> autoConnectCandidates = {};
 
     printFunc("Last connected id : $lastId");
     _scanSub = _ble
@@ -67,8 +68,7 @@ class BluetoothService {
         )
         .listen(
           (device) {
-            if (!device.name.toLowerCase().startsWith('ble_')) {
-            // if (!device.name.toLowerCase().startsWith('aird')) {
+            if (!device.name.toLowerCase().startsWith('${AppConst.deviceCostName}')) {
               return;
             }
             printFunc("isQr : $isQr - mac : $mac - ${device.id}");
@@ -76,7 +76,7 @@ class BluetoothService {
                 (!(device.id.toString().toLowerCase() == mac.toLowerCase()))) {
               return;
             }
-            printFunc("Devcie : ${device.name}");
+            printFunc("Device : ${device.name}");
             printFunc("UUIDs : ${device.serviceUuids}");
             printFunc("lastId : ${lastId}");
             _devices[device.id] = device;
@@ -88,8 +88,7 @@ class BluetoothService {
             if ((!isQr) &&
                 (lastId.toString().toLowerCase() == device.id.toLowerCase() &&
                     connectionStatus[lastId] == false)) {
-              autoConnect = true;
-              stopScan();
+              autoConnectCandidates.add(device.id);
             }
             if (isQr &&
                 mac.toLowerCase() == device.id.toString().toLowerCase()) {
@@ -105,7 +104,10 @@ class BluetoothService {
 
     Future.delayed(timeout, () {
       stopScan();
-      if ((!isQr) && lastId != null && autoConnect) autoReconnect(lastId);
+      if ((!isQr) && autoConnectCandidates.isNotEmpty) {
+        final candidate = autoConnectCandidates.first; // Pick the first candidate
+        autoReconnect(candidate);
+      }
     });
   }
 
@@ -130,7 +132,7 @@ class BluetoothService {
     final sub = _ble
         .connectToDevice(
           id: deviceId,
-          connectionTimeout: const Duration(seconds: 12),
+          connectionTimeout: const Duration(seconds: 15),
         )
         .listen(
           (ConnectionStateUpdate update) async {

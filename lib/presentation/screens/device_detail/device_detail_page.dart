@@ -3,12 +3,12 @@ import 'dart:ui';
 
 import 'package:dfi_seekr/core/constants/app_colors.dart';
 import 'package:dfi_seekr/core/services/bluetooth_service.dart';
-import 'package:dfi_seekr/core/services/generalMethods.dart';
+import 'package:dfi_seekr/core/services/general_methods.dart';
 import 'package:dfi_seekr/core/services/seeckr_battery_provisioning_controller.dart';
 import 'package:dfi_seekr/core/utils/logger.dart';
 import 'package:dfi_seekr/presentation/widgets/animated_gradient_button.dart';
 import 'package:dfi_seekr/presentation/widgets/buttons.dart';
-import 'package:dfi_seekr/presentation/widgets/dialogBox.dart';
+import 'package:dfi_seekr/presentation/widgets/dialog_box.dart';
 import 'package:dfi_seekr/presentation/widgets/qr_code_reader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
@@ -48,7 +48,7 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
 
   @override
   void dispose() {
-    macController.stopBatInfoPolling();
+    macController.dispose();
     macController.errorText.removeListener(_errorListener);
     widget.bluetooth.isConnected.removeListener(_listener);
     _serialController.dispose();
@@ -382,7 +382,7 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                               );
 
                               if (_adminTapCount == 5) {
-                                print("You have entered 5 times");
+                                printFunc("You have entered 5 times");
 
                                 setState(() {
                                   adminConfig = true;
@@ -585,7 +585,7 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                             ), //AppColors.neonAccent,
                           ),
                           Text(
-                            "${(avgVolt ?? 0.0).toStringAsFixed(2)}",
+                            "${(avgVolt).toStringAsFixed(2)}",
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,

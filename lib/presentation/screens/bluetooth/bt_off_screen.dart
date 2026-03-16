@@ -24,7 +24,6 @@ class BluetoothOffScreen extends StatelessWidget {
   }
 
   Widget buildTitle(BuildContext context) {
-    String? state = adapterState?.toString().split(".").last;
     return Text(
       'Bluetooth is Turned off',
       style: TextStyle(

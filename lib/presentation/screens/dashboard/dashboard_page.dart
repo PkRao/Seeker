@@ -210,10 +210,10 @@ class _DashboardPageState extends State<DashboardPage> {
 import 'dart:async';
 
 import 'package:dfi_seekr/core/constants/app_colors.dart';
-import 'package:dfi_seekr/core/services/generalMethods.dart';
+import 'package:dfi_seekr/core/services/general_methods.dart';
 import 'package:dfi_seekr/core/services/hive_service.dart';
 import 'package:dfi_seekr/core/utils/logger.dart';
-import 'package:dfi_seekr/presentation/widgets/dialogBox.dart';
+import 'package:dfi_seekr/presentation/widgets/dialog_box.dart';
 import 'package:dfi_seekr/presentation/widgets/qr_code_reader.dart';
 import 'package:dfi_seekr/routes/app_routes.dart';
 import 'package:flutter/material.dart';

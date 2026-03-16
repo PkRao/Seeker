@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
-var screenSize;
+late Size screenSize;
 
 void getSize(BuildContext context) {
   screenSize = MediaQuery.of(context).size;

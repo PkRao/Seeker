@@ -2,7 +2,7 @@ import 'package:dfi_seekr/core/constants/app_colors.dart';
 import 'package:dfi_seekr/core/constants/constants.dart';
 import 'package:dfi_seekr/core/services/bluetooth_service.dart';
 import 'package:dfi_seekr/presentation/screens/bluetooth/bt_off_screen.dart';
-import 'package:dfi_seekr/presentation/widgets/dialogBox.dart';
+import 'package:dfi_seekr/presentation/widgets/dialog_box.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' hide BluetoothService;

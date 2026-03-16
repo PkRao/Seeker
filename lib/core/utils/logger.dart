@@ -1,6 +1,7 @@
 import 'dart:developer' as dev;
 
 import 'package:dfi_seekr/core/constants/constants.dart';
+import 'package:flutter/cupertino.dart';
 
 void logInfo(String tag, String msg) => printFunc('[INFO][$tag] $msg');
 

@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:dfi_seekr/core/utils/logger.dart';
-import 'package:dfi_seekr/presentation/widgets/dialogBox.dart';
+import 'package:dfi_seekr/presentation/widgets/dialog_box.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 
@@ -94,6 +93,7 @@ class MacProgrammingController {
   void dispose() {
     _notifySub?.cancel();
     _notifySubSeeker?.cancel();
+    stopBatInfoPolling(); // Ensure timer is stopped
   }
 
   // ===============================
@@ -120,16 +120,23 @@ class MacProgrammingController {
         printFunc("📩 ACK RECEIVED: $json");
 
         if (json["ack"] == "SET_MAC") {
-          _ackCompleter?.complete(json["status"] == "OK");
+          if (_ackCompleter != null && !_ackCompleter!.isCompleted) {
+            _ackCompleter!.complete(json["status"] == "OK");
+          }
         } else if (json["ack"] == "TOTAL") {
-          _ackCompleter?.complete(json["status"] == "OK");
+          if (_ackCompleter != null && !_ackCompleter!.isCompleted) {
+            _ackCompleter!.complete(json["status"] == "OK");
+          }
           // errorText.value = "👍 Battery Deleted";
         } else if (json["ack"] == "DELETE") {
-          _ackCompleter?.complete(json["status"] == "OK");
-          if (json["status"] == "OK") errorText.value = "👍 Battery Deleted";
+          if (_ackCompleter != null && !_ackCompleter!.isCompleted) {
+            _ackCompleter!.complete(json["status"] == "OK");
+          }          if (json["status"] == "OK") errorText.value = "👍 Battery Deleted";
         } else if (json["ack"] == "CLEAR") {
           _lastChangeErrorReason = "";
-          _ackCompleter?.complete(json["status"] == "OK");
+          if (_ackCompleter != null && !_ackCompleter!.isCompleted) {
+            _ackCompleter!.complete(json["status"] == "OK");
+          }
           // errorText.value = "👍 Battery Deleted";
         } else if (json["ack"] == "COUNT") {
           if (json["status"] == "OK") {
@@ -159,7 +166,9 @@ class MacProgrammingController {
           }
         } else if (json["ack"] == "CHANGE") {
           if (json["status"] == "OK") {
-            _ackCompleter?.complete(json["status"] == "OK");
+            if (_ackCompleter != null && !_ackCompleter!.isCompleted) {
+              _ackCompleter!.complete(json["status"] == "OK");
+            }
 
             errorText.value = "👍 Battery Linked";
           } else if (json["status"] == "WAIT") {
@@ -170,7 +179,9 @@ class MacProgrammingController {
             printFunc("Change ack : ${json["reason"]}");
             printFunc("Change ack error: ${errorText.value}");
             Future.delayed(Duration(milliseconds: 500));
-            _ackCompleter?.complete(json["status"] == "OK");
+            if (_ackCompleter != null && !_ackCompleter!.isCompleted) {
+              _ackCompleter!.complete(json["status"] == "OK");
+            }
 
             if (_ackCompleter != null && !_ackCompleter!.isCompleted) {
               _ackCompleter!.complete(false);
@@ -282,11 +293,24 @@ json={
   // DEVICE NOTIFY HANDLER (ACK / NACK)
   // ===============================
   void _handleNotifyDeviceInfo(List<int> data) {
-    final chunk = utf8.decode(data);
+    String chunk;
+    try {
+      chunk = utf8.decode(data);
+    } catch (e) {
+      printFunc("Invalid UTF-8 data in device info: $e");
+      return;
+    }
     printFunc("RAW CHUNK Device info : $chunk");
     if (_notifSeekerInfoyBuffer.endsWith(chunk)) {
       errorText.value = 'Chunk repeated';
       return;
+      /*
+    }
+    if (_notifSeekerInfoyBuffer.length > 10000) {
+      _notifSeekerInfoyBuffer = "";
+      errorText.value = 'Buffer overflow in device info';
+      return;
+      */
     }
     _notifSeekerInfoyBuffer += chunk;
 
@@ -327,11 +351,24 @@ json={
   // NOTIFY HANDLER (ACK / NACK)
   // ===============================
   void _handleNotify(List<int> data) {
-    final chunk = utf8.decode(data);
+    String chunk;
+    try {
+      chunk = utf8.decode(data);
+    } catch (e) {
+      printFunc("Invalid UTF-8 data: $e");
+      return;
+    }
     printFunc("RAW CHUNK: $chunk");
     if (_notifyBuffer.endsWith(chunk)) {
       errorText.value = 'Chunk repeated';
       return;
+/*
+   }
+    if (_notifyBuffer.length > 10000) {
+      _notifyBuffer = "";
+      errorText.value = 'Buffer overflow';
+      return;
+      */
     }
     _notifyBuffer += chunk.toString();
 
@@ -462,7 +499,7 @@ json={
     for (int i = 0; i < macList.length; i++) {
       final index = i + 1;
       progressText.value = "Sending B$index / B$total";
-      payload = payload + ",${macList[i]}";
+      payload = "payload,${macList[i]}";
     }
     for (int attempt = 1; attempt <= retryCount; attempt++) {
       // {
@@ -513,7 +550,7 @@ json={
     progressText.value = "Sending $index";
 
     for (int attempt = 1; attempt <= 2; attempt++) {
-      final payload = "CHANGE-$index,${macId},${safePair}";
+      final payload = "CHANGE-$index,${macId.toString()},${safePair}";
       // {
       //   "cmd": "SET_MAC",
       //   "index": "B$index",

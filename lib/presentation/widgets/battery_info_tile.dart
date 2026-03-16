@@ -341,7 +341,11 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
                       await Future.delayed(
                         Duration(seconds: widget.macController.interval - 1),
                       );
+                      widget.macController.isBusy.value = false;
 
+ await widget.macController.startBatInfoPolling();
+ // await widget.macController._readBatInfoWithAck('LIVE_DATA');
+                      ();
                       setState(() => isLinking = false);
                     },
                     icon: const Icon(

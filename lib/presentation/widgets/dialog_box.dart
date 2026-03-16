@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:dfi_seekr/core/constants/app_colors.dart';
-import 'package:dfi_seekr/core/services/generalMethods.dart';
+import 'package:dfi_seekr/core/services/general_methods.dart';
 import 'package:dfi_seekr/presentation/widgets/buttons.dart';
 import 'package:flutter/material.dart';
 

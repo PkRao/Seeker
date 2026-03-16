@@ -8,12 +8,12 @@ class BluetoothStateManager {
     BluetoothAdapterState.off,
   );
 
-  static bool _isStarted = false;
+  // static bool _isStarted = false;
 
   // Call only once (example: from SplashScreen)
   static void startListening() {
     // if (_isStarted) return;
-    _isStarted = true;
+    // _isStarted = true;
 
     // Listen and update notifier
     FlutterBluePlus.adapterState.listen((state) {

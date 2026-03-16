@@ -1,5 +1,5 @@
 import 'package:dfi_seekr/presentation/widgets/qr_code_reader.dart';
-import 'package:dfi_seekr/presentation/widgets/textFields.dart';
+import 'package:dfi_seekr/presentation/widgets/text_fields.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -19,8 +19,6 @@ class _ProvisioningPageState extends State<ProvisioningPage> {
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    final deviceId = args != null ? args['deviceId'] as String? : null;
 
     return SeekerBaseScaffold(
       appBar: AppBar(

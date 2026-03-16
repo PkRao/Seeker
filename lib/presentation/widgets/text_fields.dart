@@ -11,7 +11,7 @@ class TextFeildNewUser extends StatelessWidget {
 
   // final IconData icon;
   final onChanged;
-  final etext;
+  final String? etext;
   final dynamic alignemnt;
   final dynamic validators;
   final bool enable;
@@ -166,7 +166,6 @@ class SearchTextFieldContainer extends StatelessWidget {
     );
   }
 }
-
 class CircularTextField extends StatelessWidget {
   final String? hintText;
   final TextEditingController? Controller;
@@ -175,7 +174,7 @@ class CircularTextField extends StatelessWidget {
   final bool obscure;
   final IconData? icon;
   final IconData? sufixicon;
-  dynamic etext;
+  final dynamic etext;
   final Color? color;
   final ValueChanged<String>? onSubmitted;
 

@@ -90,7 +90,7 @@ class _GlowBluetoothIconState extends State<GlowBluetoothIcon>
         ],
       ),
     );
-
+/*
     AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -120,6 +120,6 @@ class _GlowBluetoothIconState extends State<GlowBluetoothIcon>
           ),
         );
       },
-    );
+    );*/
   }
 }
