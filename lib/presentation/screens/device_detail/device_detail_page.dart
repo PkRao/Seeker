@@ -48,10 +48,10 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
 
   @override
   void dispose() {
-    macController.dispose();
     macController.errorText.removeListener(_errorListener);
     widget.bluetooth.isConnected.removeListener(_listener);
     _serialController.dispose();
+    macController.dispose();
     super.dispose();
   }
 
