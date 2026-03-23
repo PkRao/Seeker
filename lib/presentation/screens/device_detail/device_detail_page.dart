@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:dfi_seekr/core/constants/app_colors.dart';
 import 'package:dfi_seekr/core/services/bluetooth_service.dart';
 import 'package:dfi_seekr/core/services/general_methods.dart';
+import 'package:dfi_seekr/core/services/hive_service.dart';
 import 'package:dfi_seekr/core/services/seeckr_battery_provisioning_controller.dart';
 import 'package:dfi_seekr/core/utils/logger.dart';
 import 'package:dfi_seekr/presentation/widgets/animated_gradient_button.dart';
@@ -45,15 +46,18 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
   final TextEditingController _serialController = TextEditingController();
   bool _isSerialSubmitting = false;
   bool _canSerialSubmitting = false;
+  late VoidCallback _batInfoListener; // 🔥 Store listener for cleanup
 
   @override
   void dispose() {
     macController.errorText.removeListener(_errorListener);
+    macController.batInfo.removeListener(_batInfoListener); // 🔥 Remove listener
     widget.bluetooth.isConnected.removeListener(_listener);
     _serialController.dispose();
     macController.dispose();
     super.dispose();
   }
+  final stopwatch = Stopwatch();
 
   @override
   void initState() {
@@ -76,13 +80,33 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
 
       macController.startNotifications();
       macController.startDeviceNotifications();
-      macController.getSeekrInfo();
-      Future.delayed(const Duration(seconds: 5));
+      stopwatch.start();
 
+      // 🔥 Start battery polling immediately instead of waiting 4 seconds
       macController.startBatInfoPolling();
-      Future.delayed(const Duration(seconds: 16), () {
-        isLiveData = true;
-      });
+      
+      // 🔥 Listen to batInfo changes - set isLiveData only when we have data
+      _batInfoListener = () {
+        final batInfo = macController.batInfo.value;
+        // Set isLiveData to true only when we have at least one valid battery
+        if (batInfo.isNotEmpty && !isLiveData) {
+          if (mounted) {
+            setState(() {
+              isLiveData = true;
+            });
+          }
+        }
+      };
+      macController.batInfo.addListener(_batInfoListener);
+
+      // Get device info in parallel (doesn't block polling)
+      macController.getSeekrInfo();
+      stopwatch.stop();
+      print('Elapsed time to get seeker info : ${stopwatch.elapsedMilliseconds/1000} sec');
+      stopwatch.reset();
+
+      stopwatch.start();
+
       Timer.periodic(Duration(seconds: 60), (_) async {
         previuserror = "";
       });
@@ -109,7 +133,7 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
     if (widget.bluetooth.isConnected.value == false) {
       // ✅ Auto close the page
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context,rootNavigator: true).pop();
       }
     }
   }
@@ -274,11 +298,14 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                       isLoading = false;
                     });
                   } else if (value == 3) {
+                    printFunc("connectedDeviceId :${widget.bluetooth.connectedDeviceId}");
+                    printFunc("connectedDeviceId :${ HiveService().getString(HiveService.lastSavedDevice) }");
                     // 🔌 Disconnect Device
-                    await widget.bluetooth.disconnect(
-                      widget.bluetooth.connectedDeviceId ?? "",
-                    );
-                    // if (mounted) Navigator.of(context).pop();
+                    String deviceIdToDisconnect = widget.bluetooth.connectedDeviceId ?? HiveService().getString(HiveService.lastSavedDevice) ?? "";
+                    // Dispose controller before disconnecting to prevent notification disposal errors
+                    await widget.bluetooth.disconnect(deviceIdToDisconnect);
+                    macController.dispose();
+                    // if (mounted) Navigator.of(context,rootNavigator: true).pop();
                   }
                 },
                 itemBuilder:
@@ -551,9 +578,15 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                       var avgVolt = 0.0;
                       var avgCharge = 0.0;
                       int noOfLiveBat = 0;
+                      final now = DateTime.now();
+
                       for (int i = 0; i < batInfo.length; i++) {
+                        int lastUpdate = (now.difference(batInfo[i]?["time"])).inSeconds;
+printFunc("lastUpdate : $lastUpdate");
                         if (batInfo[i] != null) {
-                          if (batInfo[i]?["valid"] == true &&
+                          if (
+                          // batInfo[i]?["valid"] == true &&
+                          lastUpdate <= 35 &&
                               batInfo[i]?["voltage"] != null &&
                               batInfo[i]?["voltage"]! > 0) {
                             noOfLiveBat++;
@@ -566,10 +599,12 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                           }
                         }
                       }
-
-                      avgVolt = (avgVolt / (noOfLiveBat)) / 100;
-                      avgCharge = (avgCharge / (noOfLiveBat));
-                      // avgVolt = batInfo.where((e) => (e["voltage"] ?? 0) > 0).map((e) => (e["voltage"] as num).toDouble()).reduce((a, b) => a + b) / batInfo.where((e) => (e["voltage"] ?? 0) > 0).length;
+                      // noOfLiveBat= int.tryParse(macController.deviceInfo.value["Batteries"].toString())??0;
+if(noOfLiveBat>0) {
+  avgVolt = (avgVolt / (noOfLiveBat)) / 100;
+  avgCharge = (avgCharge / (noOfLiveBat));
+}
+// avgVolt = batInfo.where((e) => (e["voltage"] ?? 0) > 0).map((e) => (e["voltage"] as num).toDouble()).reduce((a, b) => a + b) / batInfo.where((e) => (e["voltage"] ?? 0) > 0).length;
                       //  avgVolt =batInfo.any((e) => num.tryParse(e["voltage"].toString()) != null && num.tryParse(e["voltage"].toString())! > 0)
                       //      ? batInfo.map((e) => num.tryParse(e["voltage"].toString()) ?? 0).where((v) => v > 0).reduce((a, b) => a + b) /
                       //      batInfo.map((e) => num.tryParse(e["voltage"].toString()) ?? 0).where((v) => v > 0).length
@@ -579,13 +614,13 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                       return Row(
                         children: [
                           Icon(
-                            Icons.battery_alert_outlined,
+                            Icons.electric_bolt,size: 20,
                             color: batteryColor(
                               avgCharge,
                             ), //AppColors.neonAccent,
                           ),
                           Text(
-                            "${(avgVolt).toStringAsFixed(2)}",
+                            " ${(avgVolt).toStringAsFixed(2)}",
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -1306,6 +1341,7 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                 : ValueListenableBuilder<List<Map?>>(
                   valueListenable: macController.batInfo,
                   builder: (_, batInfo, __) {
+
                     printFunc("BAT Info ${batInfo}");
                     printFunc("BAT Info live  ${isLiveData}");
                     getSize(context);
@@ -1350,7 +1386,10 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                               ),
                             );
                           }
-
+                          stopwatch.stop();
+                          print('Elapsed time to get live info : ${stopwatch.elapsedMilliseconds/1000}s');
+                          stopwatch.reset();
+                          stopwatch.start();
                           return Container(
                             padding: EdgeInsets.only(bottom: 10),
                             margin: EdgeInsets.only(bottom: 15),

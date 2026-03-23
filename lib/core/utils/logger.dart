@@ -9,7 +9,7 @@ void logError(String tag, String msg) => printFunc('[ERROR][$tag] $msg');
 
 void printFunc(var str) {
   // if (AppConst.testing)
-  // print(str.toString());
+  print(str.toString());
   // dev.log(str.toString());
   // debugPrint(str.toString());
 }

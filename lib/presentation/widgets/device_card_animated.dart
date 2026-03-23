@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dfi_seekr/core/services/hive_service.dart';
 import 'package:dfi_seekr/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 
@@ -37,6 +38,7 @@ class _DeviceCardAnimatedState extends State<DeviceCardAnimated>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   bool connecting = false;
+  final lastId = HiveService().getString("${HiveService.lastSavedDevice}");
 
   @override
   void initState() {
@@ -71,7 +73,7 @@ class _DeviceCardAnimatedState extends State<DeviceCardAnimated>
     return SlideTransition(
       position: slide,
       child: Card(
-        color: Color(0x7F3C424B), // AppColors.card,
+        color:  AppColors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         child: ListTile(
           onTap: () async {
@@ -88,12 +90,23 @@ class _DeviceCardAnimatedState extends State<DeviceCardAnimated>
             horizontal: 16,
             vertical: 12,
           ),
-          title: Text(
-            widget.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            softWrap: false,
-            style: const TextStyle(color: Colors.white),
+          title: Row(
+            children: [
+              if (widget.id == lastId)
+              isConnected
+                  ? Icon(
+                Icons.bluetooth_connected_outlined,
+                color: AppColors.neonAccent,
+              )
+                  : Icon(Icons.bluetooth, color: Colors.grey),
+              Text(
+                widget.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                softWrap: false,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ],
           ),
           subtitle: Text(
             widget.id,

@@ -8,7 +8,7 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 class MacProgrammingController {
   final FlutterReactiveBle ble;
   final String deviceId;
-  final int interval = 10;
+  final int interval = 5; // 🔥 Reduced from 10 to 5 seconds for faster polling
 
   final Uuid serviceUuid;
   final Uuid writeUuid;
@@ -91,8 +91,16 @@ class MacProgrammingController {
   }
 
   void dispose() {
-    _notifySub?.cancel();
-    _notifySubSeeker?.cancel();
+    try {
+      _notifySub?.cancel();
+    } catch (e) {
+      printFunc("Error canceling notify sub: $e");
+    }
+    try {
+      _notifySubSeeker?.cancel();
+    } catch (e) {
+      printFunc("Error canceling seeker sub: $e");
+    }
     stopBatInfoPolling(); // Ensure timer is stopped
   }
 
@@ -101,7 +109,7 @@ class MacProgrammingController {
   // ===============================
   //
   Future<void> _processJson(String jsonString) async {
-    try {
+    // try {
       final json = jsonDecode(jsonString);
       printFunc("📩 JSON RECEIVED: $json");
 
@@ -142,6 +150,8 @@ class MacProgrammingController {
           if (json["status"] == "OK") {
             deviceInfo.value = {};
             batInfo.value = [];
+            isLiveData.value = false;
+
             await getSeekrInfo();
             errorText.value = "👍 Battery Configured";
           } else {
@@ -151,7 +161,7 @@ class MacProgrammingController {
           if (json["status"] == "OK") {
             deviceInfo.value = {};
             batInfo.value = [];
-
+isLiveData.value = false;
             await getSeekrInfo();
             errorText.value = "👍 Configuration Cleared";
           } else {
@@ -165,6 +175,7 @@ class MacProgrammingController {
             errorText.value = "❌ SSN configuration failed"; //: $e";
           }
         } else if (json["ack"] == "CHANGE") {
+          printFunc("Change ack CHANGE : ${json["status"]}");
           if (json["status"] == "OK") {
             if (_ackCompleter != null && !_ackCompleter!.isCompleted) {
               _ackCompleter!.complete(json["status"] == "OK");
@@ -173,7 +184,11 @@ class MacProgrammingController {
             errorText.value = "👍 Battery Linked";
           } else if (json["status"] == "WAIT") {
           } else {
-            errorText.value = json["reason"].toString();
+            errorText.value =
+            (json["reason"].toString() == "DEVICE_NOT_AVAILABLE")
+                ? "Device is Offline"
+                :
+            json["reason"].toString();
             _lastChangeErrorReason = json["reason"].toString();
 
             printFunc("Change ack : ${json["reason"]}");
@@ -196,10 +211,10 @@ class MacProgrammingController {
           deviceInfo.value = json;
         }
       }
-    } catch (e) {
-      printFunc("❌ JSON PARSE ERROR: $e");
+    // } catch (e) {
+    //   printFunc("❌ JSON PARSE ERROR: $e");
       // errorText.value = "❌ failed ";
-    }
+    // }
   }
 
   void _handleLiveData(Map json) {
@@ -223,8 +238,8 @@ json={
 
     // Total batteries you expect
     int totalBatteries =
-        int.tryParse((deviceInfo.value["Batteries"] ?? "4").toString()) ?? 4;
-
+        int.tryParse((deviceInfo.value["Batteries"] ?? "2").toString()) ?? 4;
+printFunc("totalBatteries totalBatteries : $totalBatteries");
     // Create empty slots
     final List<Map<String, dynamic>?> ordered = List.filled(
       totalBatteries,
@@ -248,6 +263,9 @@ json={
       );
 
       if (pos == null || pos <= 0 || pos > totalBatteries) continue;
+      printFunc("pos pos $pos");
+      printFunc("isLiveData pos ${isLiveData.value}");
+      printFunc("batInfo pos ${batInfo.value}");
 
       if (!isLiveData.value || map["valid"].toString() == "true") {
         map["time"] = now;
@@ -292,7 +310,10 @@ json={
   // ===============================
   // DEVICE NOTIFY HANDLER (ACK / NACK)
   // ===============================
+  final stp=Stopwatch();
+
   void _handleNotifyDeviceInfo(List<int> data) {
+
     String chunk;
     try {
       chunk = utf8.decode(data);
@@ -323,7 +344,8 @@ json={
       int endIndex = -1;
 
       for (int i = startIndex; i < _notifSeekerInfoyBuffer.length; i++) {
-        if (_notifSeekerInfoyBuffer[i] == '{') braceCount++;
+        if (_notifSeekerInfoyBuffer[i] == '{'){stp.start();
+          braceCount++;}
         if (_notifSeekerInfoyBuffer[i] == '}') braceCount--;
 
         if (braceCount == 0) {
@@ -342,7 +364,9 @@ json={
 
       // Remove processed JSON from buffer
       _notifSeekerInfoyBuffer = _notifSeekerInfoyBuffer.substring(endIndex + 1);
-
+stp.stop();
+      print('Elapsed time to get json info : ${stp.elapsedMilliseconds/1000} sec');
+      stp.reset();
       _processJson(jsonString.trim());
     }
   }
@@ -381,7 +405,10 @@ json={
       int endIndex = -1;
 
       for (int i = startIndex; i < _notifyBuffer.length; i++) {
-        if (_notifyBuffer[i] == '{') braceCount++;
+        if (_notifyBuffer[i] == '{') {
+         stp.start();
+         braceCount++;
+        }
         if (_notifyBuffer[i] == '}') braceCount--;
 
         if (braceCount == 0) {
@@ -397,6 +424,9 @@ json={
 
       // Remove processed JSON from buffer
       _notifyBuffer = _notifyBuffer.substring(endIndex + 1);
+      stp.stop();
+      print('Elapsed time to get json info : ${stp.elapsedMilliseconds/1000} sec ');
+      stp.reset();
 
       _processJson(jsonString.trim());
     }
@@ -572,32 +602,38 @@ json={
       } else if (attempt == 2) {
         Future.delayed(Duration(milliseconds: 300));
         printFunc(
-          "Attempt 2 is done :: \n${_lastChangeErrorReason} : safe : $safePair",
+          "Attempt 2 is done :: ${_lastChangeErrorReason} - ${_lastChangeErrorReason.toString().toUpperCase() == "DEVICE_NOT_AVAILABLE"}: \nsafe : $safePair",
         );
-        if ((_lastChangeErrorReason == "DEVICE_NOT_AVAILABLE") && safePair) {
-          popUpDialog(
-            context,
-            "Yes",
-            "No",
-
-            title: "Warning",
-            content: "Battery is not live\nDo you want to pair anyways?",
-            onPressRightBtn: () async {
-              printFunc("YEs pair"); //     () async {
-              Navigator.of(context, rootNavigator: true).pop();
-              await changeTrackr(
+        if ((_lastChangeErrorReason.toString().toUpperCase() == "DEVICE_NOT_AVAILABLE") && safePair) {
+          try {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              popUpDialog(
                 context,
-                macId: macId,
-                index: index,
-                safePair: false,
-              );
-            },
-            onPressLeftBtn: () {
-              printFunc("No pair"); //     () async {
+                "Yes",
+                "No",
 
-              Navigator.of(context, rootNavigator: true).pop();
-            },
-          );
+                title: "Warning",
+                content: "Battery is not live\nDo you want to pair anyways?",
+                onPressRightBtn: () async {
+                  printFunc("YEs pair"); //     () async {
+                  Navigator.of(context, rootNavigator: true).pop();
+                  await changeTrackr(
+                    context,
+                    macId: macId,
+                    index: index,
+                    safePair: false,
+                  );
+                },
+                onPressLeftBtn: () {
+                  printFunc("No pair"); //     () async {
+
+                  Navigator.of(context, rootNavigator: true).pop();
+                },
+              );
+            });
+          } catch (e) {
+            printFunc("Failed to show dialog: $e");
+          }
         } else {
           errorText.value = "❌ Failed to link battery (${index.toUpperCase()})";
 
@@ -622,9 +658,11 @@ json={
 
     _isBatPolling = true;
     final payload = "LIVE_DATA";
-    // ✅ Call immediately
+    
+    // 🔥 Fire first poll immediately without awaiting to show UI faster
     if (!isBusy.value) {
-      await _readBatInfoWithAck(payload);
+      // await
+      _readBatInfoWithAck(payload); // Don't await - fire and forget
     }
 
     _batInfoTimer = Timer.periodic(Duration(seconds: interval), (_) async {
@@ -645,7 +683,7 @@ json={
   // ===============================
   Future<bool> _readBatInfoWithAck(String payload) async {
     _ackCompleter = Completer<bool>();
-    Duration timeout = Duration(seconds: interval - 1);
+    Duration timeout = Duration(seconds: (interval-2)); // 🔥 Reduced to 3 seconds for faster timeout
     printFunc("TX : ${payload}");
     try {
       await ble.writeCharacteristicWithResponse(

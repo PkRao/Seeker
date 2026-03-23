@@ -1,3 +1,4 @@
+/*
 import 'dart:ui';
 
 import 'package:dfi_seekr/core/constants/app_colors.dart';
@@ -41,7 +42,9 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
 
   @override
   Widget build(BuildContext context) {
-   /*  {
+    */
+/*
+     {
        "index": "B1",
        "mac": "AA:BB:CC:DD:EE:FF",
        "voltage": 2392,
@@ -57,7 +60,8 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
     final mac = widget.data["mac"] ?? "";
     final bsn = widget.data["BSN"] ?? "";
     final live = (widget.data["valid"]??true).toString()=="true";
-    */
+    *//*
+
     final voltage = widget.data["voltage"] ?? 0;
     final temperature = widget.data["temp"] ?? 0;
     final charge = widget.data["%"] ?? 0;
@@ -77,9 +81,9 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
             borderRadius: BorderRadius.circular(20),
             gradient: LinearGradient(
               colors:
-                  isLinked
-                      ? [Colors.white30, Colors.white10]
-                      : [AppColors.bgStart, AppColors.bgEnd],
+              isLinked
+                  ? [Colors.white30, Colors.white10]
+                  : [AppColors.bgStart, AppColors.bgEnd],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -99,18 +103,18 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
           // physics: const NeverScrollableScrollPhysics(),
           // child:        FittedBox(fit:BoxFit.scaleDown,
           child:
-              isLinked
-                  ? _linkedUI(
-                    context,
-                    live,
-                    bsn,
-                    mac,
-                    charge * 1.0,
-                    voltage,
-                    temperature,
-                    time,
-                  )
-                  : _notLinkedUI(context),
+          isLinked
+              ? _linkedUI(
+            context,
+            live,
+            bsn,
+            mac,
+            charge * 1.0,
+            voltage,
+            temperature,
+            time,
+          )
+              : _notLinkedUI(context),
           // ),
           // ),
         ),
@@ -120,15 +124,15 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
 
   // ================= LINKED UI =================
   Widget _linkedUI(
-    BuildContext context,
-    bool live,
-    String bsn,
-    String mac,
-    double charge,
-    int voltage,
-    int temperature,
-    DateTime time,
-  ) {
+      BuildContext context,
+      bool live,
+      String bsn,
+      String mac,
+      double charge,
+      int voltage,
+      int temperature,
+      DateTime time,
+      ) {
     final now = DateTime.now();
     final lastUpdate = (now.difference(time)).inSeconds;
     return Column(
@@ -143,12 +147,12 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: ((lastUpdate <= 35)
-                        ? Colors.greenAccent
-                        : (lastUpdate > 35 && lastUpdate <= 60)
-                        ? Colors.yellowAccent.shade700
-                        : (lastUpdate > 60 && lastUpdate < 120)
-                        ? Colors.orangeAccent
-                        : Colors.redAccent)
+                    ? Colors.greenAccent
+                    : (lastUpdate > 35 && lastUpdate <= 60)
+                    ? Colors.yellowAccent.shade700
+                    : (lastUpdate > 60 && lastUpdate < 120)
+                    ? Colors.orangeAccent
+                    : Colors.redAccent)
                     .withOpacity(0.8),
                 boxShadow: [
                   BoxShadow(
@@ -188,22 +192,22 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
                 });
               }, // 👈 YOU HANDLE
               child:
-                  isLinking
-                      ? const Center(
-                        child: SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.cyanAccent,
-                          ),
-                        ),
-                      )
-                      : const Icon(
-                        Icons.link_off,
-                        color: Colors.redAccent,
-                        size: 20,
-                      ),
+              isLinking
+                  ? const Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.cyanAccent,
+                  ),
+                ),
+              )
+                  : const Icon(
+                Icons.link_off,
+                color: Colors.redAccent,
+                size: 20,
+              ),
             ),
           ],
         ),
@@ -241,7 +245,8 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  /*   _valueTile(
+                  */
+/*   _valueTile(
                     icon: Icons.battery_charging_full,
                     label: "time",
                     value: "${time.toString().split(" ")[1].split(".")[0]}",
@@ -252,7 +257,8 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
                     label: "lastUpdate",
                     value: "${lastUpdate}",
                     glowColor: batteryColor(charge),
-                  ),*/
+                  ),*//*
+
                   _valueTile(
                     icon: Icons.battery_charging_full,
                     label: "Charge",
@@ -308,69 +314,69 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
           width: double.infinity,
           height: 36,
           child:
-              isLinking
-                  ? const Center(
-                    child: SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.cyanAccent,
-                      ),
-                    ),
-                  )
-                  : ValueListenableBuilder<bool>(
-                    valueListenable: widget.macController.isBusy,
-                    builder: (contextt, busy, _) {
-                      return OutlinedButton.icon(
-                        onPressed: busy ? (){} : () async {
-                          final mac = await QRScannerWidget(
-                            contextt,
-                            "QR Code Battery ${widget.data["index"] ?? "0"}",
-                          );
+          isLinking
+              ? const Center(
+            child: SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.cyanAccent,
+              ),
+            ),
+          )
+              : ValueListenableBuilder<bool>(
+            valueListenable: widget.macController.isBusy,
+            builder: (contextt, busy, _) {
+              return OutlinedButton.icon(
+                onPressed: busy ? (){} : () async {
+                  final mac = await QRScannerWidget(
+                    contextt,
+                    "QR Code Battery ${widget.data["index"] ?? "0"}",
+                  );
 
-                          if (mac == null || mac.isEmpty) return;
+                  if (mac == null || mac.isEmpty) return;
 
-                          setState(() => isLinking = true); // ✅ show loader
+                  setState(() => isLinking = true); // ✅ show loader
 
-                          await widget.macController.changeTrackr(
-                            context,
-                            macId: mac,
-                            index: widget.data["index"] ?? "b1",
-                            safePair: true,
-                          );
-                          widget.macController.isBusy.value = false;
+                  await widget.macController.changeTrackr(
+                    context,
+                    macId: mac,
+                    index: widget.data["index"] ?? "b1",
+                    safePair: true,
+                  );
+                  widget.macController.isBusy.value = false;
 
-                          // ⏳ keep loader for 10 seconds
-                          await widget.macController.startBatInfoPolling();
-                          await Future.delayed(
-                            Duration(seconds: widget.macController.interval+2),
-                          );
+                  // ⏳ keep loader for 10 seconds
+                  await widget.macController.startBatInfoPolling();
+                  await Future.delayed(
+                    Duration(seconds: widget.macController.interval+2),
+                  );
 
-                          // await widget.macController._readBatInfoWithAck('LIVE_DATA');
+                  // await widget.macController._readBatInfoWithAck('LIVE_DATA');
 
-                          setState(() => isLinking = false);
-                        },
-                        icon: const Icon(
-                          Icons.link,
-                          size: 18,
-                          color: Colors.cyanAccent,
-                        ),
-                        label: const Text(
-                          "Link Battery",
-                          maxLines: 1,
-                          style: TextStyle(fontSize: 10, color: Colors.cyanAccent),
-                        ),
+                  setState(() => isLinking = false);
+                },
+                icon: const Icon(
+                  Icons.link,
+                  size: 18,
+                  color: Colors.cyanAccent,
+                ),
+                label: const Text(
+                  "Link Battery",
+                  maxLines: 1,
+                  style: TextStyle(fontSize: 10, color: Colors.cyanAccent),
+                ),
 
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.cyanAccent),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      );
-                    },
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.cyanAccent),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
+                ),
+              );
+            },
+          ),
         ),
       ],
     );
@@ -432,31 +438,32 @@ class _BatteryInfoTileState extends State<BatteryInfoTile> {
     );
   }
 
-  // Widget _valueTile(String label, String value, Color glowColor) {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
-  //       const SizedBox(height: 3),
-  //       Row(
-  //         children: [
-  //           Container(
-  //             width: 8,
-  //             height: 8,
-  //             decoration: BoxDecoration(
-  //               color: glowColor,
-  //               shape: BoxShape.circle,
-  //               boxShadow: [BoxShadow(color: glowColor.withOpacity(0.6), blurRadius: 8, spreadRadius: 1)],
-  //             ),
-  //           ),
-  //           const SizedBox(width: 8),
-  //           Text(
-  //             value,
-  //             style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
-  //           ),
-  //         ],
-  //       ),
-  //     ],
-  //   );
-  // }
+// Widget _valueTile(String label, String value, Color glowColor) {
+//   return Column(
+//     crossAxisAlignment: CrossAxisAlignment.start,
+//     children: [
+//       Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+//       const SizedBox(height: 3),
+//       Row(
+//         children: [
+//           Container(
+//             width: 8,
+//             height: 8,
+//             decoration: BoxDecoration(
+//               color: glowColor,
+//               shape: BoxShape.circle,
+//               boxShadow: [BoxShadow(color: glowColor.withOpacity(0.6), blurRadius: 8, spreadRadius: 1)],
+//             ),
+//           ),
+//           const SizedBox(width: 8),
+//           Text(
+//             value,
+//             style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+//           ),
+//         ],
+//       ),
+//     ],
+//   );
+// }
 }
+*/

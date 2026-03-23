@@ -107,6 +107,9 @@ class BluetoothService {
       if ((!isQr) && autoConnectCandidates.isNotEmpty) {
         final candidate = autoConnectCandidates.first; // Pick the first candidate
         autoReconnect(candidate);
+      } else if ((!isQr) && lastId != null && lastId.isNotEmpty) {
+        // Try to auto-reconnect to last connected device even if not discovered in scan
+        autoReconnect(lastId);
       }
     });
   }
@@ -236,6 +239,10 @@ class BluetoothService {
 
   // ---------------- AUTO RECONNECT ----------------
   Future<void> autoReconnect(String deviceId) async {
+    if (isConnected.value) {
+      printFunc("Already connected, skipping auto-reconnect for $deviceId");
+      return;
+    }
     printFunc("AUTO RECONNECT TRY → $deviceId");
     final ok = await connect(deviceId);
     if (ok)
