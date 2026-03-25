@@ -102,7 +102,7 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
       // Get device info in parallel (doesn't block polling)
       macController.getSeekrInfo();
       stopwatch.stop();
-      print('Elapsed time to get seeker info : ${stopwatch.elapsedMilliseconds/1000} sec');
+      // print('Elapsed time to get seeker info : ${stopwatch.elapsedMilliseconds/1000} sec');
       stopwatch.reset();
 
       stopwatch.start();
@@ -572,7 +572,7 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                   ValueListenableBuilder<List<Map?>>(
                     valueListenable: macController.batInfo,
                     builder: (_, batInfo, __) {
-                      printFunc("BAT Info ${batInfo}");
+                      printFunc("BAT Info batInfo :${batInfo}");
                       printFunc("BAT Info live  ${isLiveData}");
                       getSize(context);
                       var avgVolt = 0.0;
@@ -581,14 +581,18 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                       final now = DateTime.now();
 
                       for (int i = 0; i < batInfo.length; i++) {
-                        int lastUpdate = (now.difference(batInfo[i]?["time"])).inSeconds;
-printFunc("lastUpdate : $lastUpdate");
-                        if (batInfo[i] != null) {
+// printFunc("bat info mac ${batInfo[i]?["mac"].runtimeType}");
+                        if (batInfo[i] != null&&(batInfo[i]?["mac"]!=null&&batInfo[i]?["mac"]!="")) {
+                          int lastUpdate = (now.difference(batInfo[i]?["time"])).inSeconds;
+                          printFunc("lastUpdate : $lastUpdate");
                           if (
                           // batInfo[i]?["valid"] == true &&
                           lastUpdate <= 35 &&
                               batInfo[i]?["voltage"] != null &&
                               batInfo[i]?["voltage"]! > 0) {
+
+
+
                             noOfLiveBat++;
                             avgVolt += num.parse(
                               (batInfo[i]!["voltage"] ?? 0).toString(),
@@ -1387,7 +1391,7 @@ if(noOfLiveBat>0) {
                             );
                           }
                           stopwatch.stop();
-                          print('Elapsed time to get live info : ${stopwatch.elapsedMilliseconds/1000}s');
+                          // print('Elapsed time to get live info : ${stopwatch.elapsedMilliseconds/1000}s');
                           stopwatch.reset();
                           stopwatch.start();
                           return Container(

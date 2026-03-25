@@ -245,7 +245,6 @@ printFunc("totalBatteries totalBatteries : $totalBatteries");
       totalBatteries,
       null,
     );
-    final now = DateTime.now();
     // final  timeStamp="${now.hour.toString().padLeft(2, '0')}:"
     //     "${now.minute.toString().padLeft(2, '0')}:"
     //     "${now.second.toString().padLeft(2, '0')}";
@@ -268,6 +267,7 @@ printFunc("totalBatteries totalBatteries : $totalBatteries");
       printFunc("batInfo pos ${batInfo.value}");
 
       if (!isLiveData.value || map["valid"].toString() == "true") {
+        final now = DateTime.now();
         map["time"] = now;
       }
  /*     else if ((batInfo.value[pos - 1]?["%"].toString()) !=
@@ -287,6 +287,7 @@ printFunc("totalBatteries totalBatteries : $totalBatteries");
     }
 
     // Optional: Fill missing batteries with defaults
+
     batInfo.value = List.generate(totalBatteries, (i) {
       return ordered[i] ??
           // {};
@@ -298,7 +299,10 @@ printFunc("totalBatteries totalBatteries : $totalBatteries");
             "temp": 0,
             "BSN": "",
             "valid": false,
-          };
+            // "time" :isLiveData.value? now: batInfo.value[i]?["time"],
+
+    };
+
     });
 
     printFunc("✅ LIVE DATA PARSED \n(${batInfo.value} batteries)");
@@ -365,7 +369,7 @@ printFunc("totalBatteries totalBatteries : $totalBatteries");
       // Remove processed JSON from buffer
       _notifSeekerInfoyBuffer = _notifSeekerInfoyBuffer.substring(endIndex + 1);
 stp.stop();
-      print('Elapsed time to get json info : ${stp.elapsedMilliseconds/1000} sec');
+      // print('Elapsed time to get json info : ${stp.elapsedMilliseconds/1000} sec');
       stp.reset();
       _processJson(jsonString.trim());
     }
@@ -425,7 +429,7 @@ stp.stop();
       // Remove processed JSON from buffer
       _notifyBuffer = _notifyBuffer.substring(endIndex + 1);
       stp.stop();
-      print('Elapsed time to get json info : ${stp.elapsedMilliseconds/1000} sec ');
+      // print('Elapsed time to get json info : ${stp.elapsedMilliseconds/1000} sec ');
       stp.reset();
 
       _processJson(jsonString.trim());

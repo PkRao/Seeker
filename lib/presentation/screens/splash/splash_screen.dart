@@ -36,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
     BluetoothStateManager.startListening();
     _bluetooth.cleanupStaleConnection();
-    Timer(const Duration(milliseconds: 6000), () {
+    Timer(const Duration(milliseconds: 3000), () {
       Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
     });
   }
