@@ -34,7 +34,7 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
   late MacProgrammingController macController;
   bool assignBat = false;
   bool isLoading = false;
-  bool isLiveData = false;
+  bool isInitialLiveData = false;
   String previuserror = "";
 
   List<String> list = [];
@@ -89,10 +89,10 @@ class _DeviceDetailPageState extends State<DeviceDetailPage> {
       _batInfoListener = () {
         final batInfo = macController.batInfo.value;
         // Set isLiveData to true only when we have at least one valid battery
-        if (batInfo.isNotEmpty && !isLiveData) {
+        if (batInfo.isNotEmpty && !isInitialLiveData) {
           if (mounted) {
             setState(() {
-              isLiveData = true;
+              isInitialLiveData = true;
             });
           }
         }
@@ -573,7 +573,7 @@ Please proceed carefully while scanning, as the scanning order is important.''',
                     valueListenable: macController.batInfo,
                     builder: (_, batInfo, __) {
                       printFunc("BAT Info batInfo :${batInfo}");
-                      printFunc("BAT Info live  ${isLiveData}");
+                      printFunc("BAT Info live  ${isInitialLiveData}");
                       getSize(context);
                       var avgVolt = 0.0;
                       var avgCharge = 0.0;
@@ -582,7 +582,7 @@ Please proceed carefully while scanning, as the scanning order is important.''',
 
                       for (int i = 0; i < batInfo.length; i++) {
 // printFunc("bat info mac ${batInfo[i]?["mac"].runtimeType}");
-                        if (batInfo[i] != null&&(batInfo[i]?["mac"]!=null&&batInfo[i]?["mac"]!="")) {
+                        if (batInfo[i] != null&&(batInfo[i]?["mac"]!=""&&batInfo[i]?["mac"]!=null)&&(batInfo[i]?["BSN"]!=""&&batInfo[i]?["BSN"]!=null)) {
                           int lastUpdate = (now.difference(batInfo[i]?["time"])).inSeconds;
                           printFunc("lastUpdate : $lastUpdate");
                           if (
@@ -1347,7 +1347,7 @@ if(noOfLiveBat>0) {
                   builder: (_, batInfo, __) {
 
                     printFunc("BAT Info ${batInfo}");
-                    printFunc("BAT Info live  ${isLiveData}");
+                    printFunc("BAT Info live  ${isInitialLiveData}");
                     getSize(context);
                     return ValueListenableBuilder<bool>(
                       valueListenable: macController.isBusy,
@@ -1379,7 +1379,7 @@ if(noOfLiveBat>0) {
                                       width: 200,
                                       height: 200,
                                     ),
-                                    isLiveData
+                                    isInitialLiveData
                                         ? const Center(child: Text("No data"))
                                         : CircularProgressIndicator(
                                           strokeWidth: 2,

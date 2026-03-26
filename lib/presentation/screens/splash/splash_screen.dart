@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dfi_seekr/core/services/bluetooth_adapter_state.dart';
 import 'package:dfi_seekr/core/services/bluetooth_service.dart';
+import 'package:dfi_seekr/core/services/general_methods.dart';
 import 'package:dfi_seekr/presentation/widgets/dif_logo.dart';
 import 'package:flutter/material.dart';
 
@@ -49,7 +50,9 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return SeekerBaseScaffold(
+    getSize(context);
+
+  return SeekerBaseScaffold(
       applyPadding: false,
       body: Center(
         child: Column(

@@ -24,7 +24,7 @@ class MacProgrammingController {
 
   // UI state
   final ValueNotifier<bool> isBusy = ValueNotifier(false);
-  final ValueNotifier<bool> isLiveData = ValueNotifier(false);
+  final ValueNotifier<bool> isInitialLiveData = ValueNotifier(false);
   final ValueNotifier<String> progressText = ValueNotifier("");
   final ValueNotifier<List<Map?>> batInfo = ValueNotifier([]);
   final ValueNotifier<Map<String, dynamic>> deviceInfo = ValueNotifier({});
@@ -150,7 +150,7 @@ class MacProgrammingController {
           if (json["status"] == "OK") {
             deviceInfo.value = {};
             batInfo.value = [];
-            isLiveData.value = false;
+            isInitialLiveData.value = false;
 
             await getSeekrInfo();
             errorText.value = "👍 Battery Configured";
@@ -161,7 +161,7 @@ class MacProgrammingController {
           if (json["status"] == "OK") {
             deviceInfo.value = {};
             batInfo.value = [];
-isLiveData.value = false;
+isInitialLiveData.value = false;
             await getSeekrInfo();
             errorText.value = "👍 Configuration Cleared";
           } else {
@@ -238,13 +238,15 @@ json={
 
     // Total batteries you expect
     int totalBatteries =
-        int.tryParse((deviceInfo.value["Batteries"] ?? "2").toString()) ?? 4;
+        int.tryParse((deviceInfo.value["Batteries"] ?? "2").toString()) ?? 2;
 printFunc("totalBatteries totalBatteries : $totalBatteries");
+printFunc("Recived Json : ${devices}");
     // Create empty slots
     final List<Map<String, dynamic>?> ordered = List.filled(
       totalBatteries,
       null,
     );
+    printFunc("ordered : $ordered \n${ordered.length}");
     // final  timeStamp="${now.hour.toString().padLeft(2, '0')}:"
     //     "${now.minute.toString().padLeft(2, '0')}:"
     //     "${now.second.toString().padLeft(2, '0')}";
@@ -263,10 +265,10 @@ printFunc("totalBatteries totalBatteries : $totalBatteries");
 
       if (pos == null || pos <= 0 || pos > totalBatteries) continue;
       printFunc("pos pos $pos");
-      printFunc("isLiveData pos ${isLiveData.value}");
+      printFunc("isLiveData pos ${isInitialLiveData.value}");
       printFunc("batInfo pos ${batInfo.value}");
 
-      if (!isLiveData.value || map["valid"].toString() == "true") {
+      if (!isInitialLiveData.value || map["valid"].toString() == "true") {
         final now = DateTime.now();
         map["time"] = now;
       }
@@ -281,8 +283,14 @@ printFunc("totalBatteries totalBatteries : $totalBatteries");
       }
       */
       else {
-        map["time"] = batInfo.value[pos - 1]?["time"];
-      }
+        printFunc("pos $pos");
+        printFunc("Length of bat ${batInfo.value.length}");
+        try {
+          map["time"] = batInfo.value[pos - 1]?["time"] ?? DateTime.now();
+        } catch (e) {}
+          printFunc("Error preserving time: $e\n${batInfo.value[pos-1]}");
+          map["time"] = DateTime.now();
+        }
       ordered[pos - 1] = map; // b1 → index 0
     }
 
@@ -306,7 +314,7 @@ printFunc("totalBatteries totalBatteries : $totalBatteries");
     });
 
     printFunc("✅ LIVE DATA PARSED \n(${batInfo.value} batteries)");
-    isLiveData.value = true;
+    isInitialLiveData.value = true;
     return;
   }
 
